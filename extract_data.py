@@ -11,6 +11,8 @@ import numpy as np
 
 # channels with these indexes will be skipped
 # TODO: make sure (ask Sebastian) if we can really skip them
+from EEGLearn.raw_to_image import raw_to_image
+
 ARTIFICIAL_CHANNELS = (5, 11, 18, 22,)
 
 
@@ -41,6 +43,7 @@ def extract_raw(filepaths):
         locs - list of lists of channel locations
         max_series_len - longest sequence found in the data (used for padding)
         max_val - (float) maximal value found among channel data
+        sfreq - (int) sampling frequency of the data
     """
     max_series_len = 0
     max_val = sys.float_info.min
@@ -74,7 +77,8 @@ def extract_raw(filepaths):
         subjects_data.append(np.array(channels_data))
         locs.append(channels_locs)
 
-    return subjects, subjects_data, locs, max_series_len, max_val
+    sfreq = raw.info['sfreq']
+    return subjects, subjects_data, locs, max_series_len, max_val, sfreq
 
 
 def process_data(data, max_series_len=None, max_val=None):
@@ -135,15 +139,20 @@ if __name__ == '__main__':
         exit()
 
     print('Files found: {}'.format(files_found))
-    subjects, subjects_data, locs, max_series_len, max_val = extract_raw(filepaths=files[:50])
+    subjects, subjects_data, locs, max_series_len, max_val, sfreq = extract_raw(filepaths=files[:2])
     subjects_data = process_data(
         data=subjects_data,
         max_series_len=max_series_len,
         max_val=max_val,
     )
+
     if args.images:
         print('Converting to images')
-        # TODO
+        images_data = []
+        for row_idx, subject_data in enumerate(subjects_data):
+            row_images = raw_to_image(raw_data=subject_data, locs_3d=locs[row_idx], sfreq=sfreq)
+            images_data.append(row_images)
+        subjects_data = images_data
 
     print('Saving to h5')
     save_to_h5(
