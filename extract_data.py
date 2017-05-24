@@ -8,11 +8,10 @@ from mne.io import *
 # progress bar
 from tqdm import tqdm
 import numpy as np
+from EEGLearn.raw_to_image import raw_to_image
 
 # channels with these indexes will be skipped
 # TODO: make sure (ask Sebastian) if we can really skip them
-from EEGLearn.raw_to_image import raw_to_image
-
 ARTIFICIAL_CHANNELS = (5, 11, 18, 22,)
 
 
@@ -139,7 +138,7 @@ if __name__ == '__main__':
         exit()
 
     print('Files found: {}'.format(files_found))
-    subjects, subjects_data, locs, max_series_len, max_val, sfreq = extract_raw(filepaths=files[:2])
+    subjects, subjects_data, locs, max_series_len, max_val, sfreq = extract_raw(filepaths=files)
     subjects_data = process_data(
         data=subjects_data,
         max_series_len=max_series_len,
@@ -147,9 +146,8 @@ if __name__ == '__main__':
     )
 
     if args.images:
-        print('Converting to images')
         images_data = []
-        for row_idx, subject_data in enumerate(subjects_data):
+        for row_idx, subject_data in enumerate(tqdm(subjects_data, desc='Images')):
             row_images = raw_to_image(raw_data=subject_data, locs_3d=locs[row_idx], sfreq=sfreq)
             images_data.append(row_images)
         subjects_data = images_data

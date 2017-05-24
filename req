@@ -4,4 +4,6 @@ lasagne==0.1
 mne==0.14
 tqdm==4.11.2
 h5py==2.7.0
+# this is important to fix Theano's find_graphviz error on Medusa
+pydot3==1.0.9
 
