@@ -40,7 +40,7 @@ def freq_to_band(frequency):
     return None
 
 
-def raw_to_image(raw_data, locs_3d, sfreq, n_gridpoints=32):
+def raw_to_image(raw_data, locs_3d, sfreq, n_gridpoints=32, normalize=True):
     n_channels = raw_data.shape[0]
     sample_rate = 1 / sfreq
     channels_samples = []
@@ -77,7 +77,7 @@ def raw_to_image(raw_data, locs_3d, sfreq, n_gridpoints=32):
         locs=np.array(locs_2d),
         features=feats,
         n_gridpoints=n_gridpoints,
-        normalize=False,
+        normalize=normalize,
     )
 
     return images

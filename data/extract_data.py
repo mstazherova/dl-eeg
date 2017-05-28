@@ -141,7 +141,7 @@ if __name__ == '__main__':
         exit()
 
     print('Files found: {}'.format(files_found))
-    subjects, subjects_data, locs, max_series_len, max_val, sfreq = extract_raw(filepaths=files[:2])
+    subjects, subjects_data, locs, max_series_len, max_val, sfreq = extract_raw(filepaths=files)
     subjects_data = process_data(
         data=subjects_data,
         max_series_len=max_series_len,
