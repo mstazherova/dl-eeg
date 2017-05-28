@@ -136,6 +136,8 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--target', default='data/extracted.hdf5')
     parser.add_argument('-i', '--images', action='store_true')
     parser.add_argument('-n', '--normalize_images', action='store_true')
+    parser.add_argument('-f', '--fft_window_len', default=0.5,
+                        help='Size of the window for FFT (in seconds) - used when creating images')
     args = parser.parse_args()
 
     target_dir = os.path.dirname(args.target)
@@ -163,7 +165,8 @@ if __name__ == '__main__':
                 raw_data=subject_data,
                 locs_3d=locs[row_idx],
                 sfreq=sfreq,
-                normalize=args.normalize_images
+                normalize=args.normalize_images,
+                window_len=args.fft_window_len,
             )
             images_data.append(row_images)
         subjects_data = images_data

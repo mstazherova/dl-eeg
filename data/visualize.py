@@ -47,11 +47,11 @@ def plot_image(image_data, save_path=None):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Data extraction')
-    parser.add_argument('-f', '--hdf5_filepath', default='./data/images.hdf5')
+    parser.add_argument('-f', '--hdf5_filepath', default='images.hdf5')
     parser.add_argument('-s', '--save_path', default=None,
                         help='If specified, saves the image to the given path instead of displaying')
-    parser.add_argument('ROW_IDX', type=int, help='Index of the row of the dataset')
-    parser.add_argument('IMG_IDX', type=int, help='Index of the image in the sequence of the row')
+    parser.add_argument('ROW_IDX', type=int, nargs='?', default=0, help='Index of the row of the dataset')
+    parser.add_argument('IMG_IDX', type=int, nargs='?', default=0, help='Index of the image in the sequence of the row')
     args = parser.parse_args()
 
     h5_file = h5py.File(args.hdf5_filepath, 'r')
