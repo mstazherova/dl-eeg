@@ -3,11 +3,19 @@ import os
 import re
 
 import h5py as h5py
-import sys
 from mne.io import *
 # progress bar
 from tqdm import tqdm
 import numpy as np
+
+import os
+import sys
+import inspect
+
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir)
+
 from EEGLearn.raw_to_image import raw_to_image
 
 # channels with these indexes will be skipped
@@ -141,7 +149,7 @@ if __name__ == '__main__':
         exit()
 
     print('Files found: {}'.format(files_found))
-    subjects, subjects_data, locs, max_series_len, max_val, sfreq = extract_raw(filepaths=files)
+    subjects, subjects_data, locs, max_series_len, max_val, sfreq = extract_raw(filepaths=files[:2])
     subjects_data = process_data(
         data=subjects_data,
         max_series_len=max_series_len,
