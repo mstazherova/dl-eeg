@@ -101,7 +101,7 @@ def process_data(data, max_series_len=None, max_val=None):
     return data
 
 
-def save_to_h5(h5_filepath, labels, locs, data):
+def save_to_h5(h5_filepath, labels, locs, data, normalize_images):
     """
     Saves the data to a .hdf5 file with the necessary attributes - total number of unique labels,
     and dimensionality of the data (num_channels x max_series_len).
@@ -109,6 +109,7 @@ def save_to_h5(h5_filepath, labels, locs, data):
     :param labels: list of integers indicating labels for each row of data
     :param locs: list of lists of 3-dimensional locations of channels
     :param data: list of rows of data, where each row should have dimensionality: num_channels x max_series_len
+    :param normalize_images: boolean, indicates whether the images have been normalized
     """
     hdf5_file = h5py.File(h5_filepath, 'w')
     hdf5_data = hdf5_file.create_dataset('data', data=data)
@@ -116,6 +117,7 @@ def save_to_h5(h5_filepath, labels, locs, data):
     hdf5_file.create_dataset('locs', data=locs)
 
     hdf5_data.attrs['dims'] = data[0].shape
+    hdf5_data.attrs['normalized'] = normalize_images
     hdf5_labels.attrs['num_labels'] = len(set(labels))
     hdf5_file.close()
 
@@ -125,6 +127,7 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--data_folder', default='./data.import')
     parser.add_argument('-t', '--target', default='data/extracted.hdf5')
     parser.add_argument('-i', '--images', action='store_true')
+    parser.add_argument('-n', '--normalize_images', action='store_true')
     args = parser.parse_args()
 
     target_dir = os.path.dirname(args.target)
@@ -138,7 +141,7 @@ if __name__ == '__main__':
         exit()
 
     print('Files found: {}'.format(files_found))
-    subjects, subjects_data, locs, max_series_len, max_val, sfreq = extract_raw(filepaths=files)
+    subjects, subjects_data, locs, max_series_len, max_val, sfreq = extract_raw(filepaths=files[:2])
     subjects_data = process_data(
         data=subjects_data,
         max_series_len=max_series_len,
@@ -148,7 +151,12 @@ if __name__ == '__main__':
     if args.images:
         images_data = []
         for row_idx, subject_data in enumerate(tqdm(subjects_data, desc='Images')):
-            row_images = raw_to_image(raw_data=subject_data, locs_3d=locs[row_idx], sfreq=sfreq)
+            row_images = raw_to_image(
+                raw_data=subject_data,
+                locs_3d=locs[row_idx],
+                sfreq=sfreq,
+                normalize=args.normalize_images
+            )
             images_data.append(row_images)
         subjects_data = images_data
 
@@ -158,4 +166,5 @@ if __name__ == '__main__':
         labels=subjects,
         locs=locs,
         data=subjects_data,
+        normalize_images=args.normalize_images,
     )
