@@ -145,7 +145,7 @@ def save_to_h5(h5_filepath, labels, locs, data, normalize_images):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Data extraction')
     parser.add_argument('-d', '--data_folder', default='./data.import')
-    parser.add_argument('-t', '--target', default='data/single.hdf5')
+    parser.add_argument('-t', '--target', default='data/extracted.hdf5')
     parser.add_argument('-i', '--images', action='store_true')
     parser.add_argument('-n', '--normalize_images', action='store_true')
     parser.add_argument('-f', '--fft_window_len', default=0.5,
@@ -166,7 +166,7 @@ if __name__ == '__main__':
         exit()
 
     print('Files found: {}'.format(files_found))
-    subjects, subjects_data, locs, max_series_len, max_val, sfreq = extract_raw(filepaths=files[:10])
+    subjects, subjects_data, locs, max_series_len, max_val, sfreq = extract_raw(filepaths=files)
     subjects_data = process_data(
         data=subjects_data,
         max_series_len=max_series_len,
