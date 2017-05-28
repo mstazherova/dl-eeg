@@ -108,6 +108,19 @@ def process_data(data, max_series_len=None, max_val=None):
     return data
 
 
+def normalize_labels(labels):
+    """
+    Transforms labels of arbitrary values into integer classes.
+    :param labels: array of labels
+    :return array of values from 0 to N-1, where N is the total number of different labels
+    """
+    labels_set = set(labels)
+    labels_mapping = {}
+    for label_idx, label in enumerate(labels_set):
+        labels_mapping[label] = label_idx
+    return [labels_mapping[label] for label in labels]
+
+
 def save_to_h5(h5_filepath, labels, locs, data, normalize_images):
     """
     Saves the data to a .hdf5 file with the necessary attributes - total number of unique labels,
@@ -150,7 +163,7 @@ if __name__ == '__main__':
         exit()
 
     print('Files found: {}'.format(files_found))
-    subjects, subjects_data, locs, max_series_len, max_val, sfreq = extract_raw(filepaths=files)
+    subjects, subjects_data, locs, max_series_len, max_val, sfreq = extract_raw(filepaths=files[:10])
     subjects_data = process_data(
         data=subjects_data,
         max_series_len=max_series_len,
@@ -171,9 +184,10 @@ if __name__ == '__main__':
         subjects_data = images_data
 
     print('Saving to h5')
+    labels = normalize_labels(subjects)
     save_to_h5(
         h5_filepath=args.target,
-        labels=subjects,
+        labels=labels,
         locs=locs,
         data=subjects_data,
         normalize_images=args.normalize_images,
