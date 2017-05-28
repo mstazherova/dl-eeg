@@ -39,11 +39,13 @@ class ConvolutionalAutoEncoder:
 
         return autoencoder
 
-    def train(self, data_train, epochs=10):
+    def train(self, data_train, epochs=100):
         self.Model.fit(data_train, data_train, validation_split=0.1, nb_epoch=epochs, batch_size=32)
 
-    def train_from_dataset(self, h5_file='/datasets/CogReplay/dl-eeg/extracted_images.hdf5'):
+    def train_from_dataset(self, h5_file='/datasets/CogReplay/dl-eeg/extracted_images.hdf5', epochs=100):
         with h5py.File(h5_file) as f:
             data = np.array(f['data'])
+            # swap dimensions for the network: last dim must be channels
+            # also, merge all subjects into one dim
             data = np.reshape(np.rollaxis(data, 2, 5), (7660, 32, 32, 3))
-        self.train(data, epochs=100)
+        self.train(data, epochs)
