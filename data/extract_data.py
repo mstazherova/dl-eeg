@@ -145,11 +145,14 @@ def save_to_h5(h5_filepath, labels, locs, data, normalize_images):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Data extraction')
     parser.add_argument('-d', '--data_folder', default='./data.import')
-    parser.add_argument('-t', '--target', default='data/extracted.hdf5')
+    parser.add_argument('-t', '--target', default='data/single.hdf5')
     parser.add_argument('-i', '--images', action='store_true')
     parser.add_argument('-n', '--normalize_images', action='store_true')
     parser.add_argument('-f', '--fft_window_len', default=0.5,
                         help='Size of the window for FFT (in seconds) - used when creating images')
+    parser.add_argument('-s', '--single_frame', action='store_true',
+                        help="""Whether to perform FFT on the whole series, producing only one image
+                        (AKA the 'Single Frame Approach')""")
     args = parser.parse_args()
 
     target_dir = os.path.dirname(args.target)
@@ -179,6 +182,7 @@ if __name__ == '__main__':
                 sfreq=sfreq,
                 normalize=args.normalize_images,
                 window_len=args.fft_window_len,
+                single_frame=args.single_frame,
             )
             images_data.append(row_images)
         subjects_data = images_data

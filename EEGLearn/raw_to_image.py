@@ -40,18 +40,30 @@ def freq_to_band(frequency):
     return None
 
 
-def raw_to_image(raw_data, locs_3d, sfreq, window_len=0.5, n_gridpoints=32, normalize=True):
+def raw_to_image(raw_data, locs_3d, sfreq, window_len=0.5, single_frame=False, n_gridpoints=32, normalize=True):
     n_channels = raw_data.shape[0]
     sample_rate = 1 / sfreq
     channels_samples = []
-    # total number of windows is equal to the length of the series in seconds (which is number of entries / sfreq)
-    # divided by the length of the windows (in seconds)
-    n_windows = int(raw_data.shape[1] / sfreq / window_len)
+
+    if single_frame:
+        # perform FFT on the whole series (thus leading to only one image)
+        n_windows = 1
+    else:
+        # total number of windows is equal to the length of the series in seconds (which is number of entries / sfreq)
+        # divided by the length of the windows (in seconds)
+        n_windows = int(raw_data.shape[1] / sfreq / window_len)
+
     for channel_data in raw_data[:n_channels]:
         samples = []
         for window_idx in range(n_windows):
-            start_idx = max(0, int((window_idx - 1) * window_len * sfreq))
-            end_idx = int((window_idx + 1) * window_len * sfreq)
+            if n_windows == 1:
+                # single frame approach
+                start_idx = 0
+                end_idx = len(channel_data)
+            else:
+                start_idx = max(0, int((window_idx - 1) * window_len * sfreq))
+                end_idx = int((window_idx + 1) * window_len * sfreq)
+
             window_data = channel_data[start_idx:end_idx]
             fft = np.fft.fft(window_data)
             freqs = np.fft.fftfreq(len(fft), sample_rate)
