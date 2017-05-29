@@ -4,6 +4,8 @@ import h5py
 import numpy as np
 
 
+# TODO:
+# split into train/test/val sets
 class DataWrapper:
     def __init__(self, dataset_path):
         self.dataset_path = dataset_path
@@ -34,7 +36,7 @@ class DataWrapper:
 
 
 if __name__ == '__main__':
-    data_wrapper = DataWrapper()
+    data_wrapper = DataWrapper(dataset_path='../data/extracted.hdf5')
     for x, y in data_wrapper.gen_data(loop=False):
         print(x.shape)
         print(y)

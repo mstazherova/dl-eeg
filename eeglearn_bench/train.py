@@ -4,7 +4,7 @@ import os
 import datetime
 from keras.callbacks import ModelCheckpoint
 from keras.callbacks import TensorBoard
-from eeglearn_bench.models import maxpool
+from eeglearn_bench import models
 from eeglearn_bench.data import DataWrapper
 
 CHECKPOINTS_DIR = './checkpoints'
@@ -22,7 +22,7 @@ def train(train_data_path):
 
     data_wrapper = DataWrapper(dataset_path=train_data_path)
     # Create the model
-    model = maxpool(
+    model = models.lstm(
         num_classes=data_wrapper.num_classes,
         input_shape=data_wrapper.data_dim,
     )
