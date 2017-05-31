@@ -32,7 +32,7 @@ def find_files(folder, extension='.mat'):
     filepaths = []
     for root, dirs, files in os.walk(folder):
         for file in files:
-            if file.endswith(extension):
+            if file.endswith(extension) and '_DR_' not in file:
                 filepaths.append(os.path.join(root, file))
     return filepaths
 
@@ -62,7 +62,7 @@ def extract_raw(filepaths):
         raw = read_raw_eeglab(filepath, verbose='CRITICAL')
         data, times = raw[:, :]
         # used for padding later
-        max_series_len = max(max_series_len, len(times))
+        max_series_len = max(max_series_len, raw.n_times)
 
         channels_data, channels_locs = [], []
         for channel_idx, channel_data in enumerate(data):
@@ -87,7 +87,7 @@ def extract_raw(filepaths):
     return subjects, subjects_data, locs, max_series_len, max_val, sfreq
 
 
-def process_data(data, max_series_len=None, max_val=None):
+def process_data(data, max_series_len=None, max_val=None, length_limit=None):
     """
     Normalizes and pads the data.
     :param data: list of rows of data to be processed.
@@ -96,14 +96,27 @@ def process_data(data, max_series_len=None, max_val=None):
         padded with 0 to this length.
     :param max_val: float.
         All values in the data will be divided by this.
+    :param length_limit: integer.
+        If set, all sequences longer than this, will be split into smaller chunks of length equal to this parameter.
+        NOTE: setting this value overrides the value for max_series_len for padding the sequences.
     :return: processed data
     """
     if max_val is not None:
-        for subject_data in tqdm(data, desc='Normalizing'):
-            subject_data /= max_val
+        for row in tqdm(data, desc='Normalizing'):
+            row /= max_val
+    if length_limit is not None:
+        split_data = []
+        for row in tqdm(data, desc='Splitting'):
+            num_splits = np.math.ceil(row.shape[1] / length_limit)
+            for i in range(num_splits):
+                split = row[:, i * length_limit: min((i + 1) * length_limit, row.shape[1])]
+                split_data.append(split)
+        data = split_data
+        # if length_limit is set, set the maximum length, to which the sequences will be padded, to length_limit
+        max_series_len = length_limit
     if max_series_len is not None:
-        data = [np.pad(subject_data, ((0, 0), (0, max_series_len - subject_data.shape[1])), 'constant') for
-                subject_data in tqdm(data, desc='Padding')]
+        data = [np.pad(row, ((0, 0), (0, max_series_len - row.shape[1])), 'constant') for row in
+                tqdm(data, desc='Padding')]
 
     return data
 
@@ -153,6 +166,8 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--single_frame', action='store_true',
                         help="""Whether to perform FFT on the whole series, producing only one image
                         (AKA the 'Single Frame Approach')""")
+    parser.add_argument('-l', '--length_limit', default=None, help="""If set, limits the extracted sequences to the given value.
+        Longer sequences are then split into smaller ones.""")
     args = parser.parse_args()
 
     target_dir = os.path.dirname(args.target)
@@ -171,6 +186,7 @@ if __name__ == '__main__':
         data=subjects_data,
         max_series_len=max_series_len,
         max_val=max_val,
+        length_limit=args.length_limit,
     )
 
     if args.images:
@@ -196,3 +212,4 @@ if __name__ == '__main__':
         data=subjects_data,
         normalize_images=args.normalize_images,
     )
+    print('Finished.')
