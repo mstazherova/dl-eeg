@@ -55,5 +55,5 @@ def lstm(num_classes, input_shape):
     model.add(Dropout(0.5))
 
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-    model.__setattr__('name', 'maxpool')
+    model.__setattr__('name', 'lstm')
     return model
