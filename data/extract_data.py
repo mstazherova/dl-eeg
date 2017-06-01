@@ -32,7 +32,7 @@ def find_files(folder, extension='.mat'):
     filepaths = []
     for root, dirs, files in os.walk(folder):
         for file in files:
-            if file.endswith(extension) and '_DR_' not in file:
+            if file.endswith(extension):
                 filepaths.append(os.path.join(root, file))
     return filepaths
 
@@ -166,7 +166,7 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--single_frame', action='store_true',
                         help="""Whether to perform FFT on the whole series, producing only one image
                         (AKA the 'Single Frame Approach')""")
-    parser.add_argument('-l', '--length_limit', default=None, help="""If set, limits the extracted sequences to the given value.
+    parser.add_argument('-l', '--length_limit', default=None, type=int, help="""If set, limits the extracted sequences to the given value.
         Longer sequences are then split into smaller ones.""")
     args = parser.parse_args()
 
