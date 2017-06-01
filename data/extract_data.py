@@ -87,10 +87,10 @@ def extract_raw(filepaths):
     return subjects, subjects_data, locs, max_series_len, max_val, sfreq
 
 
-def process_data(data, max_series_len=None, max_val=None, length_limit=None):
+def process_data(data_and_locs, max_series_len=None, max_val=None, length_limit=None):
     """
     Normalizes and pads the data.
-    :param data: list of rows of data to be processed.
+    :param data_and_locs: tuple. list of rows of data to be processed, and list of corresponding channel locations
     :param max_series_len: integer.
         Maximal length of a series of data. All rows of data (and for each channel) will be
         padded with 0 to this length.
@@ -98,27 +98,33 @@ def process_data(data, max_series_len=None, max_val=None, length_limit=None):
         All values in the data will be divided by this.
     :param length_limit: integer.
         If set, all sequences longer than this, will be split into smaller chunks of length equal to this parameter.
+        The list of locations will also be updated.
         NOTE: setting this value overrides the value for max_series_len for padding the sequences.
-    :return: processed data
+    :return: processed data, and updated (if length_limit was set) locations
     """
+    data = data_and_locs[0]
+    locs = data_and_locs[1]
     if max_val is not None:
         for row in tqdm(data, desc='Normalizing'):
             row /= max_val
     if length_limit is not None:
-        split_data = []
-        for row in tqdm(data, desc='Splitting'):
+        split_data, new_locs = [], []
+        for row_idx, row in tqdm(enumerate(data), desc='Splitting'):
             num_splits = np.math.ceil(row.shape[1] / length_limit)
             for i in range(num_splits):
                 split = row[:, i * length_limit: min((i + 1) * length_limit, row.shape[1])]
                 split_data.append(split)
+                # save the same location for the splits
+                new_locs.append(locs[row_idx])
         data = split_data
+        locs = new_locs
         # if length_limit is set, set the maximum length, to which the sequences will be padded, to length_limit
         max_series_len = length_limit
     if max_series_len is not None:
         data = [np.pad(row, ((0, 0), (0, max_series_len - row.shape[1])), 'constant') for row in
                 tqdm(data, desc='Padding')]
 
-    return data
+    return data, locs
 
 
 def normalize_labels(labels):
@@ -182,8 +188,8 @@ if __name__ == '__main__':
 
     print('Files found: {}'.format(files_found))
     subjects, subjects_data, locs, max_series_len, max_val, sfreq = extract_raw(filepaths=files)
-    subjects_data = process_data(
-        data=subjects_data,
+    subjects_data, locs = process_data(
+        data_and_locs=(subjects_data, locs),
         max_series_len=max_series_len,
         max_val=max_val,
         length_limit=args.length_limit,
