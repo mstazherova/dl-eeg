@@ -22,27 +22,36 @@ from EEGLearn.raw_to_image import raw_to_image
 ARTIFICIAL_CHANNELS = (5, 11, 18, 22,)
 
 
-def find_files(folder, extension='.mat'):
+def find_files(path, extension='.mat'):
     """
     Finds files with a given extension, looking in the given folder and subdirectories (recursively).
-    :param folder: path to the folder to look
+    If path points to a file rather than a directory only this one file will be returned.
+    :param path: path to the folder to look or a single .mat file
     :param extension: str, eg.: '.mat'
     :return: list of file paths to found files
     """
+
+    # if the path specified is a single file
+    if os.path.isfile(path):
+        if path.endswith(extension):
+            return [path]
+        raise ValueError('If a single file is specified it must be a .mat file. \nGiven: {}'.format(path))
+
     filepaths = []
-    for root, dirs, files in os.walk(folder):
+    for root, dirs, files in os.walk(path):
         for file in files:
             if file.endswith(extension):
                 filepaths.append(os.path.join(root, file))
     return filepaths
 
 
-def extract_raw(filepaths):
+def extract_raw(filepaths, cut_from=0):
     """
     Extracts data in matlab's EEGLab format using the MNE library.
     Also saves the maximal encountered value among all the data (which can be used for normalization),
     and the length of the longest series.
     :param filepaths: list of file paths to the files to be extracted.
+    :param cut_from: index (of points in time series) from which to start extracting the data
     :return:
         subjects - list of (integers) labels for each file
         subjects_data - list of rows (numpy arrays) of data for a file
@@ -60,12 +69,13 @@ def extract_raw(filepaths):
         subject = int(subject.replace('S', ''))
 
         raw = read_raw_eeglab(filepath, verbose='CRITICAL')
-        data, times = raw[:, :]
+        data, _ = raw[:, :]
         # used for padding later
-        max_series_len = max(max_series_len, raw.n_times)
+        max_series_len = max(max_series_len, raw.n_times - cut_from)
 
         channels_data, channels_locs = [], []
         for channel_idx, channel_data in enumerate(data):
+            channel_data = channel_data[cut_from:]
             # skip channels from ARTIFICIAL_CHANNELS
             if channel_idx in ARTIFICIAL_CHANNELS:
                 continue
@@ -163,8 +173,8 @@ def save_to_h5(h5_filepath, labels, locs, data, normalize_images):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Data extraction')
-    parser.add_argument('-d', '--data_folder', default='./data.import')
-    parser.add_argument('-t', '--target', default='data/extracted.hdf5')
+    parser.add_argument('-d', '--data_folder', default='data++')
+    parser.add_argument('-t', '--target', default='data/long.hdf5')
     parser.add_argument('-i', '--images', action='store_true')
     parser.add_argument('-n', '--normalize_images', action='store_true')
     parser.add_argument('-f', '--fft_window_len', default=0.5,
@@ -174,6 +184,8 @@ if __name__ == '__main__':
                         (AKA the 'Single Frame Approach')""")
     parser.add_argument('-l', '--length_limit', default=None, type=int, help="""If set, limits the extracted sequences to the given value.
         Longer sequences are then split into smaller ones.""")
+    parser.add_argument('-c', '--cut_from', default=0, type=int, help="""Specifies from which index
+     to start reading the data.""")
     args = parser.parse_args()
 
     target_dir = os.path.dirname(args.target)
@@ -187,6 +199,7 @@ if __name__ == '__main__':
         exit()
 
     print('Files found: {}'.format(files_found))
+
     subjects, subjects_data, locs, max_series_len, max_val, sfreq = extract_raw(filepaths=files)
     subjects_data, locs = process_data(
         data_and_locs=(subjects_data, locs),
