@@ -1,4 +1,4 @@
-from keras.layers import Dense, MaxPooling2D, Flatten, TimeDistributed, Conv2D, Dropout, LSTM, Reshape
+from keras.layers import Dense, MaxPooling2D, Flatten, TimeDistributed, Conv2D, Dropout, LSTM, Reshape, Bidirectional
 from keras.models import Sequential
 
 CONV_ACT = 'relu'
@@ -104,4 +104,28 @@ def lstm(num_classes, input_shape):
 
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
     model.__setattr__('name', 'lstm')
+    return model
+
+
+def bi_lstm(num_classes, input_shape):
+    model = Sequential()
+
+    model.add(TimeDistributed(Conv2D(64, 3, 3, activation='relu', border_mode='same')))
+    model.add(TimeDistributed(
+        MaxPooling2D((2, 2), strides=(2, 2), border_mode='same')
+    ))
+    model.add(TimeDistributed(Conv2D(128, 3, 3, activation='relu', border_mode='same')))
+    model.add(TimeDistributed(
+        MaxPooling2D((2, 2), strides=(2, 2), border_mode='same')
+    ))
+    model.add(TimeDistributed(Conv2D(256, 3, 3, activation='relu', border_mode='same')))
+    model.add(TimeDistributed(
+        MaxPooling2D((2, 2), strides=(2, 2), border_mode='same')
+    ))
+    model.add(TimeDistributed(Flatten()))
+
+    model.add(Bidirectional(LSTM(128, activation='tanh'), input_shape))
+    model.add(Dense(num_classes, activation='softmax'))
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    model.__setattr__('name', 'bi_lstm')
     return model
