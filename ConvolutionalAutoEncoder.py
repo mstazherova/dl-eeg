@@ -53,12 +53,12 @@ class ConvolutionalAutoEncoder:
             data = np.reshape(np.rollaxis(data, 2, 5), (7660, 32, 32, 3))
         self.train(data, epochs)
 
-    if __name__ == '__main__':
-        parser = argparse.ArgumentParser(description='Autoencoder')
-        parser.add_argument('-t', '--train_data', default='/datasets/CogReplay/dl-eeg/pgram_norm.hdf5')
-        parser.add_argument('-e', '--epochs', default=11)
-        args = parser.parse_args()
-
-        train_from_dataset(
-            h5_file=args.train_data, epochs=args.epochs,
-        )
+    # if __name__ == '__main__':
+    #     parser = argparse.ArgumentParser(description='Autoencoder')
+    #     parser.add_argument('-t', '--train_data', default='/datasets/CogReplay/dl-eeg/pgram_norm.hdf5')
+    #     parser.add_argument('-e', '--epochs', default=11)
+    #     args = parser.parse_args()
+    #
+    #     train_from_dataset(
+    #         h5_file=args.train_data, epochs=args.epochs,
+    #     )
