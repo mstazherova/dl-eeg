@@ -1,10 +1,13 @@
 __author__ = 'Steffen'
+import argparse
 
 import numpy as np
 from keras.layers import Input
 from keras.layers import Convolution2D, MaxPooling2D, UpSampling2D
 from keras.models import Model
 import h5py
+
+
 
 class ConvolutionalAutoEncoder:
 
@@ -49,3 +52,13 @@ class ConvolutionalAutoEncoder:
             # also, merge all subjects into one dim
             data = np.reshape(np.rollaxis(data, 2, 5), (7660, 32, 32, 3))
         self.train(data, epochs)
+
+    if __name__ == '__main__':
+        parser = argparse.ArgumentParser(description='Autoencoder')
+        parser.add_argument('-t', '--train_data', default='/datasets/CogReplay/dl-eeg/extracted_images.hdf5')
+        parser.add_argument('-e', '--epochs', default=100)
+        args = parser.parse_args()
+
+        train_from_dataset(
+            h5_file=args.train_data, epochs=args.epochs,
+        )
