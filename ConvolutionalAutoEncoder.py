@@ -55,8 +55,8 @@ class ConvolutionalAutoEncoder:
 
     if __name__ == '__main__':
         parser = argparse.ArgumentParser(description='Autoencoder')
-        parser.add_argument('-t', '--train_data', default='/datasets/CogReplay/dl-eeg/extracted_images.hdf5')
-        parser.add_argument('-e', '--epochs', default=100)
+        parser.add_argument('-t', '--train_data', default='/datasets/CogReplay/dl-eeg/pgram_norm.hdf5')
+        parser.add_argument('-e', '--epochs', default=11)
         args = parser.parse_args()
 
         train_from_dataset(
