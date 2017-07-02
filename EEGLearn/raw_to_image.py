@@ -1,3 +1,5 @@
+from scipy import signal
+
 from .eeglearn.eeg_cnn_lib import gen_images, azim_proj
 import numpy as np
 
@@ -30,6 +32,7 @@ def sample_to_channels(sample, freqs):
     theta, alpha, beta = np.array(theta), np.array(alpha), np.array(beta)
     # compute sum of squared elements for each frequency band
     theta, alpha, beta = np.sum(theta ** 2), np.sum(alpha ** 2), np.sum(beta ** 2)
+    #theta, alpha, beta = np.sum(theta), np.sum(alpha ), np.sum(beta )
     return theta, alpha, beta
 
 
@@ -40,7 +43,15 @@ def freq_to_band(frequency):
     return None
 
 
-def raw_to_image(raw_data, locs_3d, sfreq, window_len=0.5, single_frame=False, n_gridpoints=32, normalize=True):
+def raw_to_image(
+        raw_data,
+        locs_3d,
+        sfreq,
+        use_periodgram=True,
+        window_len=0.5,
+        single_frame=False,
+        n_gridpoints=32,
+        normalize=True):
     n_channels = raw_data.shape[0]
     sample_rate = 1 / sfreq
     channels_samples = []
@@ -65,12 +76,20 @@ def raw_to_image(raw_data, locs_3d, sfreq, window_len=0.5, single_frame=False, n
                 end_idx = int((window_idx + 1) * window_len * sfreq)
 
             window_data = channel_data[start_idx:end_idx]
-            fft = np.fft.fft(window_data)
-            freqs = np.fft.fftfreq(len(fft), sample_rate)
-            theta, alpha, beta = sample_to_channels(
-                sample=fft,
-                freqs=freqs
-            )
+            if use_periodgram:
+                freqs, Pxx_spec = signal.periodogram(window_data, sfreq, scaling='spectrum')
+                #Pxx_spec = np.sqrt(Pxx_spec)
+                theta, alpha, beta = sample_to_channels(
+                    sample=Pxx_spec,
+                    freqs=freqs
+                )
+            else:
+                fft = np.fft.fft(window_data)
+                freqs = np.fft.fftfreq(len(fft), sample_rate)
+                theta, alpha, beta = sample_to_channels(
+                    sample=fft,
+                    freqs=freqs
+                )
             samples.append([theta, alpha, beta])
         channels_samples.append(np.array(samples))
 

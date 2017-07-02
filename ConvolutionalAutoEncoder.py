@@ -1,4 +1,5 @@
 __author__ = 'Steffen'
+import argparse
 
 import numpy as np
 from keras.layers import Input
@@ -78,3 +79,13 @@ class ConvolutionalAutoEncoder:
 
     def load(self, path='cae_saved.h5'):
         self.Model = load_model(path)
+
+    # if __name__ == '__main__':
+    #     parser = argparse.ArgumentParser(description='Autoencoder')
+    #     parser.add_argument('-t', '--train_data', default='/datasets/CogReplay/dl-eeg/pgram_norm.hdf5')
+    #     parser.add_argument('-e', '--epochs', default=11)
+    #     args = parser.parse_args()
+    #
+    #     train_from_dataset(
+    #         h5_file=args.train_data, epochs=args.epochs,
+    #     )
