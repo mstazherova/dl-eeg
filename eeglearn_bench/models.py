@@ -1,6 +1,8 @@
 from keras.layers import Dense, MaxPooling2D, Flatten, TimeDistributed, Conv2D, Dropout, LSTM, Reshape, Bidirectional
 from keras.models import Sequential
 
+from ..ConvolutionalAutoEncoder import ConvolutionalAutoEncoder
+
 CONV_ACT = 'relu'
 
 
@@ -122,6 +124,22 @@ def bi_lstm(num_classes, input_shape):
     model.add(TimeDistributed(
         MaxPooling2D((2, 2), strides=(2, 2), border_mode='same')
     ))
+    model.add(TimeDistributed(Flatten()))
+
+    model.add(Bidirectional(LSTM(128, activation='tanh'), input_shape))
+    model.add(Dense(num_classes, activation='softmax'))
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    model.__setattr__('name', 'bi_lstm')
+    return model
+
+def bi_lstm_weights(num_classes, input_shape):
+    model = Sequential()
+
+    cae = ConvolutionalAutoEncoder()
+    cae.load_from_weights()
+    encoder = cae.get_encoder()
+
+    model.add(TimeDistributed(encoder))
     model.add(TimeDistributed(Flatten()))
 
     model.add(Bidirectional(LSTM(128, activation='tanh'), input_shape))
