@@ -1,10 +1,9 @@
 __author__ = 'Steffen'
-import argparse
 
 import numpy as np
 from keras.layers import Input
 from keras.layers import Convolution2D, MaxPooling2D, UpSampling2D
-from keras.models import Model
+from keras.models import Sequential
 from keras.models import load_model
 import h5py
 
@@ -18,30 +17,30 @@ class ConvolutionalAutoEncoder:
         self.training_data = []
 
     @staticmethod
-    def model():
+    def model(num_layers=3, filter_nums=[64, 128, 256], compile_model=True):
         # 32x32 x 3 channels
+
+        autoencoder = Sequential()
         image_shape = (32, 32, 3)
-        input_img = Input(shape=image_shape)
+        autoencoder.add(Input(shape=image_shape))
 
         # values for parameters (filter size, stride etc.) taken from VGG image recognition network
-        x = Convolution2D(64, 3, 3, activation='relu', border_mode='same')(input_img)
-        x = MaxPooling2D((2,2), strides=(2, 2), border_mode='same')(x)
-        x = Convolution2D(128, 3, 3, activation='relu', border_mode='same')(x)
-        x = MaxPooling2D((2,2), strides=(2, 2))(x)
-        x = Convolution2D(256, 3, 3, activation='relu', border_mode='same')(x)
+        # encoder
+        for i in range(num_layers):
+            autoencoder.add(Convolution2D(filter_nums[i], 3, 3, activation='relu', border_mode='same'))
+            autoencoder.add(MaxPooling2D((2,2), strides=(2, 2), border_mode='same'))
 
-        encoded = MaxPooling2D((2,2), strides=(2, 2))(x)
+        # decoder: encoder in reverse
+        for i in range(num_layers).reverse():
+            autoencoder.add(Convolution2D(filter_nums[i], 3, 3, activation='relu', border_mode='same'))
+            autoencoder.add(UpSampling2D((2,2)))
 
-        x = Convolution2D(256, 3, 3, activation='relu', border_mode='same')(encoded)
-        x = UpSampling2D((2,2))(x)
-        x = Convolution2D(128, 3, 3, activation='relu', border_mode='same')(x)
-        x = UpSampling2D((2,2))(x)
-        x = Convolution2D(64, 3, 3, activation='relu', border_mode='same')(x)
-        x = UpSampling2D((2,2))(x)
-        decoded = Convolution2D(3, 3, 3, activation='linear', border_mode='same')(x)
+        # last convolution for output layer
+        autoencoder.add(Convolution2D(3, 3, 3, activation='linear', border_mode='same'))
 
-        autoencoder = Model(input_img, decoded)
-        autoencoder.compile(optimizer='adadelta', loss='mse')
+        # Don't compile if loading weights for predictions
+        if compile_model:
+            autoencoder.compile(optimizer='adadelta', loss='mse')
 
         return autoencoder
 
@@ -103,14 +102,3 @@ class ConvolutionalAutoEncoder:
         encoder.outputs = [encoder.layers[-1].output]
         encoder.layers[-1].outbound_nodes = []
         return encoder
-
-
-    # if __name__ == '__main__':
-    #     parser = argparse.ArgumentParser(description='Autoencoder')
-    #     parser.add_argument('-t', '--train_data', default='/datasets/CogReplay/dl-eeg/pgram_norm.hdf5')
-    #     parser.add_argument('-e', '--epochs', default=11)
-    #     args = parser.parse_args()
-    #
-    #     train_from_dataset(
-    #         h5_file=args.train_data, epochs=args.epochs,
-    #     )
