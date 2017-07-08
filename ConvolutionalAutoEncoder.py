@@ -87,7 +87,7 @@ class ConvolutionalAutoEncoder:
         self.Model = load_model(path)
 
     def load_from_weights(self, path='cae_weights.h5'):
-        self.Model = ConvolutionalAutoEncoder.model()
+        self.Model = ConvolutionalAutoEncoder.model(compile_model=False)
         self.Model.load_weights(path)
 
     def save_weights(self, path='cae_weights.h5'):
