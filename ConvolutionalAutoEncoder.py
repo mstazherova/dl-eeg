@@ -1,7 +1,7 @@
 __author__ = 'Steffen'
 
 import numpy as np
-from keras.layers import Input
+from keras.layers import Reshape
 from keras.layers import Convolution2D, MaxPooling2D, UpSampling2D
 from keras.models import Sequential
 from keras.models import load_model
@@ -22,7 +22,8 @@ class ConvolutionalAutoEncoder:
 
         autoencoder = Sequential()
         image_shape = (32, 32, 3)
-        autoencoder.add(Input(shape=image_shape))
+        # use as first layer to simplify Sequential model, doesn't actually do anything
+        autoencoder.add(Reshape(image_shape, input_shape=image_shape))
 
         # values for parameters (filter size, stride etc.) taken from VGG image recognition network
         # encoder
@@ -31,7 +32,7 @@ class ConvolutionalAutoEncoder:
             autoencoder.add(MaxPooling2D((2,2), strides=(2, 2), border_mode='same'))
 
         # decoder: encoder in reverse
-        for i in range(num_layers).reverse():
+        for i in reversed(range(num_layers)):
             autoencoder.add(Convolution2D(filter_nums[i], 3, 3, activation='relu', border_mode='same'))
             autoencoder.add(UpSampling2D((2,2)))
 
