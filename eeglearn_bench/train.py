@@ -55,7 +55,7 @@ def train(args):
                                                                   datetime.datetime.now().strftime("%Y%m%d_%H%M"),
                                                                   '_{}'.format(run_idx) if args.kfold else '',
                                                                   ))
-        tensorboard_path = './tensorboard/{}_{}'.format(
+        tensorboard_path = './tensorboard/{}_{}{}'.format(
             model.name,
             datetime.datetime.now().strftime("%Y%m%d_%H%M"),
             '_{}'.format(run_idx) if args.kfold else '',
