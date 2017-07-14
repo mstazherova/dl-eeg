@@ -5,7 +5,7 @@ import numpy as np
 
 
 class DataWrapper:
-    def __init__(self, dataset_path, val_data_perc=0.1, test_data_perc=0.0):
+    def __init__(self, dataset_path, val_data_perc=0.1, test_data_perc=0.1):
         if val_data_perc + test_data_perc >= 1:
             raise ValueError('Sum of test and validation data percentage must be less than 1.')
 

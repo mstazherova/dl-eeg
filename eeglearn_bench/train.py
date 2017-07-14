@@ -23,7 +23,7 @@ def make_dirs(*args):
 
 
 def train(train_data_path):
-    data_wrapper = DataWrapper(dataset_path=train_data_path)
+    data_wrapper = DataWrapper(dataset_path=train_data_path, test_data_perc=0.1)
     # Create the model
     model = models.lstm(
         num_classes=data_wrapper.num_classes,
@@ -52,7 +52,7 @@ def train(train_data_path):
         callbacks=callbacks,
     )
     # Evaluate the model
-    scores = model.evaluate_generator(data_wrapper.gen_data(test=True, loop=False), steps=1000)
+    scores = model.evaluate_generator(data_wrapper.gen_data(test=True), steps=1000)
     print("Accuracy: {}%".format(scores[1] * 100))
 
 
