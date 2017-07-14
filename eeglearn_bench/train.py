@@ -47,12 +47,12 @@ def train(train_data_path):
         data_wrapper.gen_data(),
         epochs=1500,
         steps_per_epoch=64,
-        validation_data=data_wrapper.gen_data(test=True),
+        validation_data=data_wrapper.gen_data(val=True),
         validation_steps=16,
         callbacks=callbacks,
     )
     # Evaluate the model
-    scores = model.evaluate_generator(data_wrapper.gen_data(), steps=1000)
+    scores = model.evaluate_generator(data_wrapper.gen_data(test=True, loop=False), steps=1000)
     print("Accuracy: {}%".format(scores[1] * 100))
 
 
