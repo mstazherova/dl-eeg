@@ -43,7 +43,7 @@ def train(args):
         print('\n####### RUN {} ##########\n'.format(run_idx))
 
         # Create the model
-        model = models.lstm(
+        model = models.bi_lstm_weights(
             num_classes=data_wrapper.num_classes,
             input_shape=data_wrapper.data_dim,
         )
@@ -60,8 +60,9 @@ def train(args):
             datetime.datetime.now().strftime("%Y%m%d_%H%M"),
             '_{}'.format(run_idx) if args.kfold else '',
         )
-        make_dirs(tensorboard_path)
-        callbacks = [
+        if not args.no_save:
+            make_dirs(tensorboard_path)
+        callbacks = [] if args.no_save else [
             TensorBoard(log_dir='./tensorboard', write_images=True),
             ModelCheckpoint(filepath=checkpoints_filepath,
                             verbose=1,
@@ -101,19 +102,23 @@ def train(args):
             print('No model file found. The model probably didnt learn anything')
 
     if args.kfold:
+        # print accuracies for each fold
         print(accuracies)
+        print('Average: {}'.format(sum(accuracies) / args.folds))
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='EEGLearn benchmarks')
     parser.add_argument('-t', '--train_data', default='../data/extracted.hdf5')
-    parser.add_argument('-e', '--epochs', default=1500)
-    parser.add_argument('--steps_train', default=16)
-    parser.add_argument('--steps_val', default=32)
-    parser.add_argument('--val_data', default=0.1)
-    parser.add_argument('--test_data', default=0.1)
+    parser.add_argument('-e', '--epochs', type=int, default=1500)
+    parser.add_argument('--no_save', action='store_true',
+                        help='If set, no tensorboard information or model weights will be saved')
+    parser.add_argument('--steps_train', type=int, default=16)
+    parser.add_argument('--steps_val', type=int, default=32)
+    parser.add_argument('--val_data', type=float, default=0.1)
+    parser.add_argument('--test_data', type=float, default=0.1)
     parser.add_argument('--kfold', action='store_true')
-    parser.add_argument('--folds', default=10)
+    parser.add_argument('--folds', type=int, default=10)
     args = parser.parse_args()
 
     train(args)
