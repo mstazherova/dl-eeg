@@ -43,7 +43,8 @@ def train(args):
         print('\n####### RUN {} ##########\n'.format(run_idx))
 
         # Create the model
-        model = models.bi_lstm_weights(
+        model = getattr(models, args.model_name)
+        model = model(
             num_classes=data_wrapper.num_classes,
             input_shape=data_wrapper.data_dim,
         )
@@ -110,6 +111,7 @@ def train(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='EEGLearn benchmarks')
     parser.add_argument('-t', '--train_data', default='../data/extracted.hdf5')
+    parser.add_argument('-m', '--model_name', default='bi_lstm')
     parser.add_argument('-e', '--epochs', type=int, default=1500)
     parser.add_argument('-b', '--batch_size', type=int, default=8)
     parser.add_argument('--batch_size_val', type=int, default=8)
