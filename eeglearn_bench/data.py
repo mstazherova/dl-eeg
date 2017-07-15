@@ -33,7 +33,7 @@ class DataWrapper:
 
         return data_and_labels
 
-    def gen_data(self, shuffle=True, loop=True, val=False, test=False):
+    def gen_data(self, shuffle=True, loop=True, val=False, test=False, batch_size=8):
         if val:
             data_and_labels = self.val_data
         elif test:
@@ -41,18 +41,25 @@ class DataWrapper:
         else:
             data_and_labels = self.train_data
 
+        items_in_batch = 0
+        Xs, Ys = [], []
         while True:
             if shuffle:
                 random.shuffle(data_and_labels)
 
             for X, label in data_and_labels:
-                X = X.reshape((1,) + tuple(self.data_dim))
+                Xs.append(X)
 
                 Y = np.zeros(self.num_classes)
                 Y[label] = 1
-                Y = Y.reshape(1, self.num_classes)
+                Ys.append(Y)
 
-                yield X, Y
+                items_in_batch += 1
+                if items_in_batch == batch_size:
+                    yield np.array(Xs), np.array(Ys)
+                    items_in_batch = 0
+                    Xs, Ys = [], []
+
             if not loop:
                 break
 
@@ -76,10 +83,10 @@ class KFoldDataWrapper(DataWrapper):
         if val_set_size * (fold_idx + 1) < len(self.data_and_labels):
             self.train_data.extend(self.data_and_labels[val_set_size * (fold_idx + 1):])
 
-    def gen_data(self, shuffle=True, loop=True, val=False, test=False):
+    def gen_data(self, shuffle=True, loop=True, val=False, test=False, batch_size=8):
         if test:
             raise ValueError('{} does not have a test dataset'.format(self.__class__))
-        return super().gen_data(shuffle=shuffle, loop=loop, val=val, test=False)
+        return super().gen_data(shuffle=shuffle, loop=loop, val=val, test=False, batch_size=batch_size)
 
     def get_test_set(self):
         raise NotImplemented()

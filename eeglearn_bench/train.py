@@ -74,10 +74,10 @@ def train(args):
 
         # Train the model
         model.fit_generator(
-            data_wrapper.gen_data(),
+            data_wrapper.gen_data(batch_size=args.batch_size),
             epochs=args.epochs,
             steps_per_epoch=args.steps_train,
-            validation_data=data_wrapper.gen_data(val=True),
+            validation_data=data_wrapper.gen_data(val=True, batch_size=args.batch_size_val),
             validation_steps=args.steps_val,
             callbacks=callbacks,
         )
@@ -85,9 +85,9 @@ def train(args):
         # Evaluate the model
         acc, total = 0, 0
         if args.kfold:
-            gen = data_wrapper.gen_data(loop=False, val=True, shuffle=False)
+            gen = data_wrapper.gen_data(loop=False, val=True, shuffle=False, batch_size=1)
         else:
-            gen = data_wrapper.gen_data(loop=False, test=True, shuffle=False)
+            gen = data_wrapper.gen_data(loop=False, test=True, shuffle=False, batch_size=1)
         # load the best model
         try:
             model.load_weights(checkpoints_filepath)
@@ -110,15 +110,17 @@ def train(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='EEGLearn benchmarks')
     parser.add_argument('-t', '--train_data', default='../data/extracted.hdf5')
-    parser.add_argument('-e', '--epochs', type=int, default=1500)
-    parser.add_argument('--no_save', action='store_true',
-                        help='If set, no tensorboard information or model weights will be saved')
-    parser.add_argument('--steps_train', type=int, default=16)
-    parser.add_argument('--steps_val', type=int, default=32)
+    parser.add_argument('-e', '--epochs', type=int, default=1)
+    parser.add_argument('-b', '--batch_size', type=int, default=8)
+    parser.add_argument('--batch_size_val', type=int, default=8)
+    parser.add_argument('--steps_train', type=int, default=2)
+    parser.add_argument('--steps_val', type=int, default=4)
     parser.add_argument('--val_data', type=float, default=0.1)
     parser.add_argument('--test_data', type=float, default=0.1)
     parser.add_argument('--kfold', action='store_true')
     parser.add_argument('--folds', type=int, default=10)
+    parser.add_argument('--no_save', action='store_true',
+                        help='If set, no tensorboard information or model weights will be saved')
     args = parser.parse_args()
 
     train(args)
