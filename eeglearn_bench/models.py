@@ -123,9 +123,11 @@ def lstm(num_classes, input_shape):
 
 
 def bi_lstm(num_classes, input_shape):
-
     model = Sequential()
-    model.add(Input(shape=(32,32,3)))
+    model.add(TimeDistributed(Conv2D(32, 3, 3, activation='relu', border_mode='same'), input_shape=input_shape))
+    model.add(TimeDistributed(
+        MaxPooling2D((2, 2), strides=(2, 2), border_mode='same')
+    ))
     model.add(TimeDistributed(Conv2D(64, 3, 3, activation='relu', border_mode='same')))
     model.add(TimeDistributed(
         MaxPooling2D((2, 2), strides=(2, 2), border_mode='same')
@@ -134,40 +136,35 @@ def bi_lstm(num_classes, input_shape):
     model.add(TimeDistributed(
         MaxPooling2D((2, 2), strides=(2, 2), border_mode='same')
     ))
-    model.add(TimeDistributed(Conv2D(256, 3, 3, activation='relu', border_mode='same')))
-    model.add(TimeDistributed(
-        MaxPooling2D((2, 2), strides=(2, 2), border_mode='same')
-    ))
     model.add(TimeDistributed(Flatten()))
 
-    model.add(Bidirectional(LSTM(128, activation='tanh'), input_shape))
+    model.add(Bidirectional(LSTM(128, activation='tanh')))
     model.add(Dense(num_classes, activation='softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
     model.__setattr__('name', 'bi_lstm')
     return model
 
 
-def bi_lstm_weights(num_classes, input_shape):
-    model = Sequential()
-
-    # 32x32 x 3 channels
-    model.add(Input(shape=(32,32,3)))
-
+def bi_lstm_weights(num_classes, input_shape, weights_path='../cae_weights.h5'):
     cae = ConvolutionalAutoEncoder()
-    cae.load_from_weights()
+    cae.load_from_weights(path=weights_path)
     encoder = cae.get_encoder()
 
-    model.add(TimeDistributed(encoder))
-    model.add(TimeDistributed(Flatten()))
+    inputs = Input(shape=tuple(input_shape))
+    x = inputs
+    for l in encoder.layers:
+        x = TimeDistributed(l)(x)
+    x = TimeDistributed(Flatten())(x)
 
-    model.add(Bidirectional(LSTM(128, activation='tanh'), input_shape))
-    model.add(Dense(num_classes, activation='softmax'))
+    x = Bidirectional(LSTM(128, activation='tanh'))(x)
+    x = Dense(num_classes, activation='softmax')(x)
+    model = Model(inputs=inputs, outputs=x)
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
     model.__setattr__('name', 'bi_lstm')
     return model
 
 
-def mixed(num_classes, input_shape):
+def mixed_paper(num_classes, input_shape):
     def CONV_ACT():
         l = LeakyReLU()
         l.__name__ = 'leakyrelu'
@@ -223,3 +220,54 @@ def mixed(num_classes, input_shape):
     )
     model.__setattr__('name', 'mixed')
     return model
+
+
+def mixed(num_classes, input_shape):
+    def CONV_ACT():
+        l = LeakyReLU()
+        l.__name__ = 'leakyrelu'
+        return l
+
+    inputs = Input(shape=tuple(input_shape))
+    x = TimeDistributed(Conv2D(32, 3, border_mode='same', activation=CONV_ACT()))(inputs)
+    x = TimeDistributed(
+        MaxPooling2D(
+            pool_size=(2, 2),
+            strides=2,
+            dim_ordering="th",
+        ))(x)
+    x = TimeDistributed(Conv2D(64, 3, border_mode='same', activation=CONV_ACT()))(x)
+    x = TimeDistributed(
+        MaxPooling2D(
+            pool_size=(2, 2),
+            strides=2,
+            dim_ordering="th",
+        ))(x)
+    x = TimeDistributed(Conv2D(128, 3, border_mode='same', activation=CONV_ACT()))(x)
+    convs = TimeDistributed(
+        MaxPooling2D(
+            pool_size=(2, 2),
+            strides=2,
+            dim_ordering="th"
+        ))(x)
+
+    lstm = TimeDistributed(Flatten())(convs)
+    lstm = LSTM(128, activation='tanh')(lstm)
+
+    conv_1d = Reshape((int(convs.shape[-1]), int(convs.shape[-4]) * int(convs.shape[-2] * convs.shape[-3])))(convs)
+    conv_1d = Conv1D(64, 3)(conv_1d)
+    conv_1d = Flatten()(conv_1d)
+
+    x = keras.layers.concatenate([lstm, conv_1d])
+    x = Dense(256, activation=CONV_ACT())(x)
+    x = Dense(num_classes, activation='softmax', )(x)
+
+    model = Model(inputs=inputs, outputs=x)
+    model.compile(
+        loss='categorical_crossentropy',
+        optimizer='adam',
+        metrics=['accuracy']
+    )
+    model.__setattr__('name', 'mixed')
+    return model
+
