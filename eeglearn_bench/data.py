@@ -9,7 +9,7 @@ class DataWrapper:
         if val_data_perc + test_data_perc >= 1:
             raise ValueError('Sum of test and validation data percentage must be less than 1.')
 
-        data_and_labels = self.__load_data__(dataset_path=dataset_path)
+        data_and_labels = self._load_data(dataset_path=dataset_path)
         random.shuffle(data_and_labels)
         val_cnt = int(val_data_perc * len(data_and_labels))
         self.val_data = data_and_labels[:val_cnt]
@@ -22,7 +22,7 @@ class DataWrapper:
             self.test_data = data_and_labels[val_cnt:test_idx]
             self.train_data = data_and_labels[test_idx:]
 
-    def __load_data__(self, dataset_path):
+    def _load_data(self, dataset_path):
         self.dataset_path = dataset_path
         h5_file = h5py.File(self.dataset_path, 'r')
         self.num_classes = h5_file['labels'].attrs['num_labels']
@@ -67,7 +67,7 @@ class DataWrapper:
 class KFoldDataWrapper(DataWrapper):
     def __init__(self, dataset_path, k=10):
         self.k = k
-        data_and_labels = self.__load_data__(dataset_path=dataset_path)
+        data_and_labels = self._load_data(dataset_path=dataset_path)
         random.shuffle(data_and_labels)
         self.data_and_labels = data_and_labels
 
