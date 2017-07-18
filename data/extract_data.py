@@ -45,6 +45,14 @@ def find_files(path, extension='.mat'):
     return filepaths
 
 
+def get_task_type(filepath):
+    dream_type = '_DR'
+    if '_MR_' in filepath:
+        dream_type = '_MR'
+    task_type = os.path.basename(filepath).split(dream_type)[0].split('_')[-1]
+    return '{}{}'.format(task_type, dream_type)
+
+
 def extract_raw(filepaths, cut_from=0):
     """
     Extracts data in matlab's EEGLab format using the MNE library.
@@ -62,7 +70,7 @@ def extract_raw(filepaths, cut_from=0):
     """
     max_series_len = 0
     max_val = sys.float_info.min
-    subjects, subjects_data, locs = [], [], []
+    subjects, subjects_data, locs, task_types = [], [], [], []
     for filepath in tqdm(filepaths, desc='Extracting'):
         # parse the subject index
         subject = re.search('S\d{2}', os.path.basename(filepath)).group(0)
@@ -92,9 +100,10 @@ def extract_raw(filepaths, cut_from=0):
         subjects.append(subject)
         subjects_data.append(np.array(channels_data))
         locs.append(channels_locs)
+        task_types.append(get_task_type(filepath))
 
     sfreq = raw.info['sfreq']
-    return subjects, subjects_data, locs, max_series_len, max_val, sfreq
+    return subjects, subjects_data, task_types, locs, max_series_len, max_val, sfreq
 
 
 def process_data(data_and_locs, max_series_len=None, max_val=None, length_limit=None):
@@ -114,6 +123,7 @@ def process_data(data_and_locs, max_series_len=None, max_val=None, length_limit=
     """
     data = data_and_locs[0]
     locs = data_and_locs[1]
+    max_val = None
     if max_val is not None:
         for row in tqdm(data, desc='Normalizing'):
             row /= max_val
@@ -150,7 +160,7 @@ def normalize_labels(labels):
     return [labels_mapping[label] for label in labels]
 
 
-def save_to_h5(h5_filepath, labels, locs, data, normalize_images):
+def save_to_h5(h5_filepath, labels, task_types, locs, data, normalize_images):
     """
     Saves the data to a .hdf5 file with the necessary attributes - total number of unique labels,
     and dimensionality of the data (num_channels x max_series_len).
@@ -160,10 +170,32 @@ def save_to_h5(h5_filepath, labels, locs, data, normalize_images):
     :param data: list of rows of data, where each row should have dimensionality: num_channels x max_series_len
     :param normalize_images: boolean, indicates whether the images have been normalized
     """
+    def code_task_types(task_types):
+        coded = []
+        for task_type in task_types:
+            if task_type == 'T_MR':
+                coded.append(0)
+            elif task_type == 'SN_MR':
+                coded.append(1)
+            elif task_type == 'A_MR':
+                coded.append(2)
+            elif task_type == 'T_DR':
+                coded.append(3)
+            elif task_type == 'SN_DR':
+                coded.append(4)
+            elif task_type == 'A_DR':
+                coded.append(5)
+            else:
+                raise ValueError('Unknown task type')
+        return coded
+
     hdf5_file = h5py.File(h5_filepath, 'w')
     hdf5_data = hdf5_file.create_dataset('data', data=data)
     hdf5_labels = hdf5_file.create_dataset('labels', data=labels)
     hdf5_file.create_dataset('locs', data=locs)
+    task_types = code_task_types(task_types)
+    task_types = np.array(task_types)
+    hdf5_file.create_dataset('task_types', data=task_types)
 
     hdf5_data.attrs['dims'] = data[0].shape
     hdf5_data.attrs['normalized'] = normalize_images
@@ -173,8 +205,8 @@ def save_to_h5(h5_filepath, labels, locs, data, normalize_images):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Data extraction')
-    parser.add_argument('-d', '--data_folder', default='data++')
-    parser.add_argument('-t', '--target', default='data/long.hdf5')
+    parser.add_argument('-d', '--data_folder', default='data.import')
+    parser.add_argument('-t', '--target', default='data/extracted.hdf5')
     parser.add_argument('-i', '--images', action='store_true')
     parser.add_argument('-n', '--normalize_images', action='store_true')
     parser.add_argument('-f', '--fft_window_len', default=0.5,
@@ -200,7 +232,7 @@ if __name__ == '__main__':
 
     print('Files found: {}'.format(files_found))
 
-    subjects, subjects_data, locs, max_series_len, max_val, sfreq = extract_raw(filepaths=files)
+    subjects, subjects_data, task_types, locs, max_series_len, max_val, sfreq = extract_raw(filepaths=files[:1])
     subjects_data, locs = process_data(
         data_and_locs=(subjects_data, locs),
         max_series_len=max_series_len,
@@ -208,14 +240,14 @@ if __name__ == '__main__':
         length_limit=args.length_limit,
     )
 
-    if args.images:
+    if args.images or True:
         images_data = []
         for row_idx, subject_data in enumerate(tqdm(subjects_data, desc='Images')):
             row_images = raw_to_image(
                 raw_data=subject_data,
                 locs_3d=locs[row_idx],
                 sfreq=sfreq,
-                normalize=args.normalize_images,
+                normalize=args.normalize_images or True,
                 window_len=args.fft_window_len,
                 single_frame=args.single_frame,
             )
@@ -227,6 +259,7 @@ if __name__ == '__main__':
     save_to_h5(
         h5_filepath=args.target,
         labels=labels,
+        task_types=task_types,
         locs=locs,
         data=subjects_data,
         normalize_images=args.normalize_images,
