@@ -4,6 +4,7 @@ import re
 import h5py as h5py
 from mne.io import *
 # progress bar
+from openpyxl import load_workbook
 from tqdm import tqdm
 import numpy as np
 
@@ -46,10 +47,37 @@ def find_files(path, extension='.mat'):
 
 
 def get_task_type(filepath):
+    def get_task_type_from_xls(filepath):
+        wb = load_workbook(filename='/datasets/CogReplay/data.import/CR_SegmentTracking_AllData_Sept1.xlsx')
+
+        filepath = os.path.basename(filepath)
+        segment_name = filepath.split('_MR_')[0]
+        segment_name = '{}_MR'.format(segment_name)
+        beg, end = filepath.split('_MR_')[1].split('.mat')[0].split('_')
+        beg, end = int(beg), int(end)
+
+        segment_flag = False
+        for row in wb.worksheets[1].rows:
+            if row[0].value and row[0].value == segment_name:
+                segment_flag = True
+            elif row[0].value:
+                if segment_flag:
+                    print('Havent found corresponding row for {}'.format(filepath))
+                    return ''
+
+            if segment_flag and row[2].value == beg:
+                task_type = row[4].value
+                return task_type
+
+        print('Havent found corresponding row for {}'.format(filepath))
+        return ''
+
     dream_type = '_DR'
     if '_MR_' in filepath:
         dream_type = '_MR'
-    task_type = os.path.basename(filepath).split(dream_type)[0].split('_')[-1]
+        task_type = get_task_type_from_xls(filepath)
+    else:
+        task_type = os.path.basename(filepath).split(dream_type)[0].split('_')[-1]
     return '{}{}'.format(task_type, dream_type)
 
 
@@ -186,7 +214,7 @@ def save_to_h5(h5_filepath, labels, task_types, locs, data, normalize_images):
             elif task_type == 'A_DR':
                 coded.append(5)
             else:
-                raise ValueError('Unknown task type')
+                raise ValueError('Unknown task type: {}'.format(task_type))
         return coded
 
     hdf5_file = h5py.File(h5_filepath, 'w')
@@ -239,7 +267,8 @@ if __name__ == '__main__':
         max_val=max_val,
         length_limit=args.length_limit,
     )
-
+    print(len(set(task_types)))
+    print(len(set(subjects)))
     if args.images or True:
         images_data = []
         for row_idx, subject_data in enumerate(tqdm(subjects_data, desc='Images')):
