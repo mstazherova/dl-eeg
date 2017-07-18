@@ -1,4 +1,5 @@
 import random
+from collections import defaultdict
 
 import h5py
 import numpy as np
@@ -92,11 +93,43 @@ class KFoldDataWrapper(DataWrapper):
         raise NotImplemented()
 
 
+class SubjectOutDataWrapper(KFoldDataWrapper):
+    def __init__(self, dataset_path, k=8, take_DR=False):
+        self.k = k
+        self.take_DR = take_DR
+        self.dataset_path = dataset_path
+        h5_file = h5py.File(self.dataset_path, 'r')
+        self.num_subjects = h5_file['labels'].attrs['num_labels']
+        self.num_classes = 6 if take_DR else 3
+        self.data_dim = h5_file['data'].attrs['dims']
+
+        self.subjects_data = defaultdict(list)
+        data, subjects, tasks = h5_file['data'], h5_file['labels'], h5_file['task_types']
+        for x, subj, y in zip(data, subjects, tasks):
+            if not take_DR and y > 2:
+                continue
+            self.subjects_data[subj].append((x, y))
+
+    def load_fold(self, fold_idx):
+        if fold_idx < 0 or fold_idx >= self.k:
+            raise ValueError("'k' must be in range [0, {})".format(self.k))
+
+        fold_size = int(self.num_subjects / self.k)
+        self.val_data = []
+        train_idxes = [idx for idx in range(self.num_subjects)]
+        for i in range(fold_size):
+            self.val_data.extend(self.subjects_data[fold_idx + i])
+            train_idxes.remove(i)
+        self.train_data = []
+        for i in train_idxes:
+            self.train_data.extend(self.subjects_data[i])
+
+
 if __name__ == '__main__':
     dataset_path = '/datasets/CogReplay/dl-eeg/pgram_norm.hdf5'
     dataset_path = '../data/extracted.hdf5'
 
-    data_wrapper = KFoldDataWrapper(dataset_path=dataset_path)
+    data_wrapper = SubjectOutDataWrapper(dataset_path=dataset_path)
     data_wrapper.load_fold(0)
     gen = data_wrapper.gen_data()
     print(next(gen))
