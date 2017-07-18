@@ -30,12 +30,19 @@ def train(args):
             dataset_path=args.train_data,
             k=args.folds,
         )
+    elif args.subject_out:
+        data_wrapper = SubjectOutDataWrapper(
+            dataset_path=args.train_data,
+            k=args.folds,
+        )
+        args.kfold = True
     else:
         data_wrapper = DataWrapper(
             dataset_path=args.train_data,
             val_data_perc=args.val_data,
             test_data_perc=args.test_data
         )
+
 
     num_runs = args.folds if args.kfold else 1
     accuracies = [0 for _ in range(num_runs)]
@@ -120,6 +127,7 @@ if __name__ == '__main__':
     parser.add_argument('--val_data', type=float, default=0.1)
     parser.add_argument('--test_data', type=float, default=0.1)
     parser.add_argument('--kfold', action='store_true')
+    parser.add_argument('--subject_out', action='store_true')
     parser.add_argument('--folds', type=int, default=10)
     parser.add_argument('--no_save', action='store_true',
                         help='If set, no tensorboard information or model weights will be saved')
