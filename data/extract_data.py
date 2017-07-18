@@ -232,7 +232,7 @@ if __name__ == '__main__':
 
     print('Files found: {}'.format(files_found))
 
-    subjects, subjects_data, task_types, locs, max_series_len, max_val, sfreq = extract_raw(filepaths=files[:1])
+    subjects, subjects_data, task_types, locs, max_series_len, max_val, sfreq = extract_raw(filepaths=files)
     subjects_data, locs = process_data(
         data_and_locs=(subjects_data, locs),
         max_series_len=max_series_len,
