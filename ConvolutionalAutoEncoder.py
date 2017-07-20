@@ -2,22 +2,24 @@ __author__ = 'Steffen'
 
 import numpy as np
 from keras.layers import Reshape
-from keras.layers import Convolution2D, MaxPooling2D, UpSampling2D
+from keras.layers import Conv2D, MaxPooling2D, UpSampling2D
 from keras.models import Sequential
 from keras.models import load_model
+import random
 import h5py
+from utils import eeg_mse
 
 
-class ConvolutionalAutoEncoder:
+class ConvolutionalAutoEncoder(object):
 
-    def __init__(self):
-        self.Model = ConvolutionalAutoEncoder.model()
+    def __init__(self, filter_nums=[32, 64, 128]):
+        self.Model = ConvolutionalAutoEncoder.model(filter_nums=filter_nums)
         self.maximum = 0
         self.minimum = 0
         self.training_data = []
 
     @staticmethod
-    def model(num_layers=3, filter_nums=[64, 128, 256], compile_model=True):
+    def model(filter_nums=[32, 64, 128], compile_model=True):
         # 32x32 x 3 channels
 
         autoencoder = Sequential()
@@ -27,21 +29,21 @@ class ConvolutionalAutoEncoder:
 
         # values for parameters (filter size, stride etc.) taken from VGG image recognition network
         # encoder
-        for i in range(num_layers):
-            autoencoder.add(Convolution2D(filter_nums[i], 3, 3, activation='relu', border_mode='same'))
-            autoencoder.add(MaxPooling2D((2,2), strides=(2, 2), border_mode='same'))
+        for filters in filter_nums:
+            autoencoder.add(Conv2D(filters, (3, 3), activation='elu', padding='same'))
+            autoencoder.add(MaxPooling2D((2,2), strides=(2, 2), padding='same'))
 
         # decoder: encoder in reverse
-        for i in reversed(range(num_layers)):
-            autoencoder.add(Convolution2D(filter_nums[i], 3, 3, activation='relu', border_mode='same'))
+        for filters in reversed(filter_nums):
+            autoencoder.add(Conv2D(filters, (3, 3), activation='elu', padding='same'))
             autoencoder.add(UpSampling2D((2,2)))
 
         # last convolution for output layer
-        autoencoder.add(Convolution2D(3, 3, 3, activation='linear', border_mode='same'))
+        autoencoder.add(Conv2D(3, (3, 3), activation='linear', padding='same'))
 
         # Don't compile if loading weights for predictions
         if compile_model:
-            autoencoder.compile(optimizer='adadelta', loss='mse')
+            autoencoder.compile(optimizer='adadelta', loss=eeg_mse)
 
         return autoencoder
 
@@ -63,7 +65,7 @@ class ConvolutionalAutoEncoder:
         return (self.maximum - self.minimum) * images + self.minimum
 
     def train(self, data_train, epochs=10):
-        self.Model.fit(data_train, data_train, validation_split=0.1, nb_epoch=epochs, batch_size=32)
+        self.Model.fit(data_train, data_train, validation_split=0.1, epochs=epochs, batch_size=32)
 
     @staticmethod
     def extract_data(h5_file):
@@ -77,8 +79,12 @@ class ConvolutionalAutoEncoder:
             #data = self.scale(data, min=data.min(), max=data.max())
         return data
 
-    def train_from_dataset(self, h5_file='/datasets/CogReplay/dl-eeg/pgram_norm.hdf5', epochs=100):
+    def train_from_dataset(self, h5_file='/data/pgram_norm.hdf5', epochs=100, use_data=1.0):
         self.training_data = ConvolutionalAutoEncoder.extract_data(h5_file)
+        if use_data < 1.0:
+            self.training_data = np.array([self.training_data[i]
+                                           for i in sorted(random.sample(xrange(len(self.training_data)),
+                                                                int(use_data * len(self.training_data))))])
         self.train(self.training_data, epochs)
 
     def save(self, path='cae_saved.h5'):
@@ -103,3 +109,18 @@ class ConvolutionalAutoEncoder:
         encoder.outputs = [encoder.layers[-1].output]
         encoder.layers[-1].outbound_nodes = []
         return encoder
+
+from scipy.io import wavfile
+from audio import mel_powerlevel_spectrogram
+import cnn
+
+def spec_from_wav(filename):
+    en_w2l = cnn.trained_keras_network('english')
+    rate, data = wavfile.read(filename)
+    mel_pls = mel_powerlevel_spectrogram(data)
+    predictions = cnn.apply_network(en_w2l, mel_pls)
+    print('Predictions: ')
+    print("".join(cnn.look_up_chars(cnn.condense(predictions[0]))))
+    #decoded = cnn.kenlm_decode(predictions.swapaxes(0, 1), beam_width=30)
+    #print('Decoded: ')
+    #print("".join(cnn.look_up_chars(decoded)))
