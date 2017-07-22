@@ -15,6 +15,7 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
 from ConvolutionalAutoEncoder import ConvolutionalAutoEncoder
+from LSTMAutoEncoder import LSTMAutoEncoder
 
 CONV_ACT = 'relu'
 
@@ -163,6 +164,11 @@ def bi_lstm_weights(num_classes, input_shape, weights_path='../cae_weights.h5'):
     model.__setattr__('name', 'bi_lstm')
     return model
 
+def bi_lstm_weights2(num_classes, input_shape):
+    lstm = LSTMAutoEncoder()
+    lstm.init_model(input_shape[1], compile=False)
+    m = lstm.get_final_model(input_shape[1], num_classes)
+    return m
 
 def mixed_paper(num_classes, input_shape):
     def CONV_ACT():
