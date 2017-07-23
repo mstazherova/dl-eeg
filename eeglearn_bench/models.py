@@ -139,7 +139,8 @@ def bi_lstm(num_classes, input_shape):
     ))
     model.add(TimeDistributed(Flatten()))
 
-    model.add(Bidirectional(LSTM(128, activation='tanh')))
+    model.add(Bidirectional(LSTM(128, activation='tanh', recurrent_activation='sigmoid', return_sequences=True, implementation=2, dropout=0.1)))
+    model.add(Bidirectional(LSTM(128, activation='tanh', recurrent_activation='sigmoid', implementation=2, dropout=0.1)))
     model.add(Dense(num_classes, activation='softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
     model.__setattr__('name', 'bi_lstm')
