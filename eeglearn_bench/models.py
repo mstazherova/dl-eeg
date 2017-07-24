@@ -162,7 +162,7 @@ def bi_lstm_weights(num_classes, input_shape, weights_path='../cae_weights.h5'):
     x = Dense(num_classes, activation='softmax')(x)
     model = Model(inputs=inputs, outputs=x)
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-    model.__setattr__('name', 'bi_lstm')
+    model.__setattr__('name', 'bi_lstm_weights')
     return model
 
 def bi_lstm_weights2(num_classes, input_shape):
@@ -225,7 +225,7 @@ def mixed_paper(num_classes, input_shape):
         optimizer='adam',
         metrics=['accuracy']
     )
-    model.__setattr__('name', 'mixed')
+    model.__setattr__('name', 'mixed_paper')
     return model
 
 
