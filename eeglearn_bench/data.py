@@ -118,8 +118,9 @@ class SubjectOutDataWrapper(KFoldDataWrapper):
         self.val_data = []
         train_idxes = [idx for idx in range(self.num_subjects)]
         for i in range(fold_size):
-            self.val_data.extend(self.subjects_data[fold_idx + i])
-            train_idxes.remove(i)
+            subject_id = fold_idx * fold_size + i
+            self.val_data.extend(self.subjects_data[subject_id])
+            train_idxes.remove(subject_id)
         self.train_data = []
         for i in train_idxes:
             self.train_data.extend(self.subjects_data[i])
