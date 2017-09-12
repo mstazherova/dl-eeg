@@ -1,0 +1,86 @@
+\documentclass{amsart}
+
+\usepackage[round]{natbib}
+\usepackage{graphicx}
+\usepackage[notref,notcite]{showkeys}
+\usepackage{url}
+
+% in case of supplementary material
+% \usepackage{xr}
+% \externaldocument{lcfit_supp}
+
+
+% general
+\newcommand{\EE}{\mathbb{E}}
+
+% arxivness
+\newcommand{\arxiv}[1]{#1}
+\newcommand{\notarxiv}[1]{}
+\newcommand{\eat}[1]{}
+
+% theorems, etc
+\newtheorem{lemma}{Lemma}
+\newtheorem{prop}{Proposition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{problem}{Problem}
+\newtheorem{defn}{Definition}
+\newtheorem{obs}{Observation}
+\newtheorem{alg}{Algorithm}
+
+\newcommand{\FIGshape}{\
+\begin{figure}
+\begin{center}
+  \arxiv{\includegraphics[height=9cm]{theta_shape.pdf}}
+\end{center}
+\caption{\
+  As $\theta$ goes to zero, the $g_\theta$ converge pointwise to $g$, which is 1 on the interior of the unit interval and 0 on the boundaries.
+}
+\label{FIGshape}
+\end{figure}
+}
+\newcommand{\refFIGshape}{1}
+
+
+\title[Shorttitle]{Longtitle}
+\author{Author}
+\date{\today}
+
+
+\begin{document}
+
+\begin{abstract}
+Start, stop.
+\end{abstract}
+
+\maketitle
+
+\section{Introduction}
+Introduction content
+
+\section{Data}
+Data content
+
+\section{Methods}
+Methods content
+
+\section{Experiments}
+Experiments content
+
+\section{Discussion}
+Discussion content
+
+\bibliography{lcfittex}
+\bibliographystyle{alphaplainnat}
+
+% Figure legends for submission
+\notarxiv{
+\section{Figure Legends}
+\FIGshape
+\renewcommand{\thefigure}{S\arabic{figure}} % Figure S1, etc.
+\setcounter{figure}{0} % Reset counter.
+}
+
+
+\bibliographystyle{plain}
+\bibliography{skeleton.bib}
+\end{document}
