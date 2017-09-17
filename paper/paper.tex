@@ -1,56 +1,19 @@
-\documentclass{amsart}
-
-\usepackage[round]{natbib}
+\documentclass{article}
 \usepackage{graphicx}
-\usepackage[notref,notcite]{showkeys}
-\usepackage{url}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{mathtools}
 
-% in case of supplementary material
-% \usepackage{xr}
-% \externaldocument{lcfit_supp}
+\graphicspath{ {./images/} }
 
-
-% general
-\newcommand{\EE}{\mathbb{E}}
-
-% arxivness
-\newcommand{\arxiv}[1]{#1}
-\newcommand{\notarxiv}[1]{}
-\newcommand{\eat}[1]{}
-
-% theorems, etc
-\newtheorem{lemma}{Lemma}
-\newtheorem{prop}{Proposition}
-\newtheorem{theorem}{Theorem}
-\newtheorem{problem}{Problem}
-\newtheorem{defn}{Definition}
-\newtheorem{obs}{Observation}
-\newtheorem{alg}{Algorithm}
-
-\newcommand{\FIGshape}{\
-\begin{figure}
-\begin{center}
-  \arxiv{\includegraphics[height=9cm]{theta_shape.pdf}}
-\end{center}
-\caption{\
-  As $\theta$ goes to zero, the $g_\theta$ converge pointwise to $g$, which is 1 on the interior of the unit interval and 0 on the boundaries.
-}
-\label{FIGshape}
-\end{figure}
-}
-\newcommand{\refFIGshape}{1}
-
-
-\title[Shorttitle]{Longtitle}
-\author{Author}
-\date{\today}
-
+\title{TITLE}
+\author{Authors}
 
 \begin{document}
-
-\begin{abstract}
-Start, stop.
-\end{abstract}
+\maketitle
+\pagenumbering{arabic}
+	
 
 \maketitle
 
@@ -61,26 +24,34 @@ Introduction content
 Data content
 
 \section{Methods}
-Methods content
+\subsection{Baseline Methods}
+Various non-deep learning methods have been employed for obtaining baseline results.
+As in Bashivan et al. \cite[pp. 7-8]{learning_eeg_repr}, Support-Vector Machines, Random Forest, and sparse Logistic Regression models have been trained, using various parameters.
+\subparagraph{Data Preparation}
+For the baseline methods, the data has been preprocessed in a more simplified way than for the Neural Network models. Features are computed for the whole sequence, rather than extracting them per certain time steps. This results in data that is no more sequential in nature, but describes the whole observation.
+For each of the 19 channels available in the data, Fast Fourier Transform has been applied on the whole length of a channel's data. Magnitude of each band (theta, alpha, and beta) has then been extracted and stored as the channel's features. In addition, an average over all channels has been computed. The resulting feature vector is then of size 60: \textit{(19 channels + additional averaged one) $\times$ 3 frequency bands}.
+\subparagraph{Models}
 
-\section{Experiments}
-Experiments content
+
+\section{Experiments and Results}
+\subsection{Results}
+\begin{center}
+\begin{tabular}{ c|c|c } 
+ Model & No. parameters & Accuracy \\ 
+ \hline
+ SVC & - & 7.78\% $\pm 4.1\% $\\ 
+ Random Forest & - & 32.71\% $\pm 8.5\%$ \\ 
+ Logistic Regression & - & 31.33\% $\pm 8.6\%$ \\ 
+\end{tabular}
+\end{center}
 
 \section{Discussion}
 Discussion content
 
-\bibliography{lcfittex}
-\bibliographystyle{alphaplainnat}
-
-% Figure legends for submission
-\notarxiv{
-\section{Figure Legends}
-\FIGshape
-\renewcommand{\thefigure}{S\arabic{figure}} % Figure S1, etc.
-\setcounter{figure}{0} % Reset counter.
-}
-
-
-\bibliographystyle{plain}
-\bibliography{skeleton.bib}
+\begin{thebibliography}{9}
+	\bibitem{learning_eeg_repr} 
+	Bashivan  P,  Rish  I,  Yeasin  M,  Codella  N  (2016). 
+	\textit{Learning  Representations from  EEG with  Deep Recurrent-Convolutional  Neural Networks}. 
+	In arXiv:1511.06448 [cs]. arXiv: 1511.06448
+\end{thebibliography}
 \end{document}
