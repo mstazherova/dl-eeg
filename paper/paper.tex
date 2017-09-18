@@ -21,17 +21,30 @@
 Introduction content
 
 \section{Data}
-Data content
+\subsection{Data Preprocessing}
+
 
 \section{Methods}
 \subsection{Baseline Methods}
 Various non-deep learning methods have been employed for obtaining baseline results.
-As in Bashivan et al. \cite[pp. 7-8]{learning_eeg_repr}, Support-Vector Machines, Random Forest, and sparse Logistic Regression models have been trained, using various parameters.
-\subparagraph{Data Preparation}
-For the baseline methods, the data has been preprocessed in a more simplified way than for the Neural Network models. Features are computed for the whole sequence, rather than extracting them per certain time steps. This results in data that is no more sequential in nature, but describes the whole observation.
+As in Bashivan et al. \cite[pp. 7-8]{learning_eeg_repr}, Support Vector Machines, Random Forest \cite{random_forests}, and sparse Logistic Regression models have been trained, using multiple parameter setting.
+\subsubsection{Data Preparation}
+For the baseline methods, the data has been preprocessed in a more simplified way than for the Neural Network models. This is due to the fact that the models used do not scale as well for high dimensional data, as opposed to the Convolutional Layers in the Neural Network models. Features are thus computed for the whole sequence, rather than extracting them per certain time steps. This results in data that is no more sequential in nature, but describes the whole observation.
 For each of the 19 channels available in the data, Fast Fourier Transform has been applied on the whole length of a channel's data. Magnitude of each band (theta, alpha, and beta) has then been extracted and stored as the channel's features. In addition, an average over all channels has been computed. The resulting feature vector is then of size 60: \textit{(19 channels + additional averaged one) $\times$ 3 frequency bands}.
-\subparagraph{Models}
+\subsubsection{Models}
 
+\subparagraph{Support Vector Machines}
+A Support Vector Machine classifier constructs a hyperplane (or set of) in the data space, which should separate the different classes. A model has been trained for each combination of the following parameters:
+\begin{itemize}
+	\item The penalty parameter \textbf{C} - from range of \{0.01, 0.1, 1, 10, 100\}
+	\item The $\gamma$ kernel coefficient - from range of \{0.1, 0.2, .., 1, 2, .., 10\}
+\end{itemize}
+
+\subparagraph{Random Forests}
+An ensemble classification method. A number of Decision Trees is being fit on different subsets of features of the training data. When classifying a data sample, the class which is given the majority of votes among the Decision Trees is chosen. A model has been trained for each of the following numbers of Decision Trees: 5, 10, 20, 50, 100, 500, 1000.
+
+\subparagraph{Logistic Regression}
+A model has been trained, using the $l_1$ as the norm for penalization, for each of the following penalization parameters \textbf{C}: \{0.01, 0.1, 1, 10, 100, 1000\}.
 
 \section{Experiments and Results}
 \subsection{Results}
@@ -39,9 +52,9 @@ For each of the 19 channels available in the data, Fast Fourier Transform has be
 \begin{tabular}{ c|c|c } 
  Model & No. parameters & Accuracy \\ 
  \hline
- SVC & - & 7.78\% $\pm 4.1\% $\\ 
- Random Forest & - & 32.71\% $\pm 8.5\%$ \\ 
- Logistic Regression & - & 31.33\% $\pm 8.6\%$ \\ 
+ SVM & - & 7.78\% $\pm 4.1\% $\\ 
+ Random Forest & - & 36.72\% $\pm 7.3\%$ \\ 
+ Logistic Regression & - & 33.6\% $\pm 5.8\%$ \\ 
 \end{tabular}
 \end{center}
 
@@ -49,9 +62,16 @@ For each of the 19 channels available in the data, Fast Fourier Transform has be
 Discussion content
 
 \begin{thebibliography}{9}
+
 	\bibitem{learning_eeg_repr} 
 	Bashivan  P,  Rish  I,  Yeasin  M,  Codella  N  (2016). 
 	\textit{Learning  Representations from  EEG with  Deep Recurrent-Convolutional  Neural Networks}. 
 	In arXiv:1511.06448 [cs]. arXiv: 1511.06448
+
+	\bibitem{random_forests} 
+	Ho, Tin Kam (1995)
+	\textit{Random Decision Forests}. 
+	Proceedings of the 3rd International Conference on Document Analysis and Recognition, Montreal, QC, 14–		16 August 1995. pp. 278–282
+	
 \end{thebibliography}
 \end{document}
