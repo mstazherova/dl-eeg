@@ -55,7 +55,7 @@ def plot_mel_spectrogram(sr, log_S, file_to_save=None, block=True):
 
 # custom loss function to mask out "black" area of images
 # seems like there should be a less-hacky way to do this, but it will work for now
-mask = K.variable(np.repeat(np.load('/project/mask.npy').flatten(), 32))
+mask = K.variable(np.repeat(np.load('/project/mask.npy').flatten(), 16*334))
 
 def eeg_mse(y_true, y_pred):
     y_true = K.flatten(y_true)
