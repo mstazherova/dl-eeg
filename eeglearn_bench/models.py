@@ -139,7 +139,8 @@ def bi_lstm(num_classes, input_shape):
     ))
     model.add(TimeDistributed(Flatten()))
 
-    model.add(Bidirectional(LSTM(128, activation='tanh')))
+    model.add(Bidirectional(LSTM(128, activation='tanh', recurrent_activation='sigmoid', return_sequences=True, implementation=2, dropout=0.1)))
+    model.add(Bidirectional(LSTM(128, activation='tanh', recurrent_activation='sigmoid', implementation=2, dropout=0.1)))
     model.add(Dense(num_classes, activation='softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
     model.__setattr__('name', 'bi_lstm')
@@ -161,7 +162,7 @@ def bi_lstm_weights(num_classes, input_shape, weights_path='../cae_weights.h5'):
     x = Dense(num_classes, activation='softmax')(x)
     model = Model(inputs=inputs, outputs=x)
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-    model.__setattr__('name', 'bi_lstm')
+    model.__setattr__('name', 'bi_lstm_weights')
     return model
 
 def bi_lstm_weights2(num_classes, input_shape, denoise=True, attn=False):
@@ -228,7 +229,7 @@ def mixed_paper(num_classes, input_shape):
         optimizer='adam',
         metrics=['accuracy']
     )
-    model.__setattr__('name', 'mixed')
+    model.__setattr__('name', 'mixed_paper')
     return model
 
 
