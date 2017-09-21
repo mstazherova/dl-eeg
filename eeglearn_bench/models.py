@@ -165,10 +165,14 @@ def bi_lstm_weights(num_classes, input_shape, weights_path='../cae_weights.h5'):
     model.__setattr__('name', 'bi_lstm_weights')
     return model
 
-def bi_lstm_weights2(num_classes, input_shape):
+def bi_lstm_weights2(num_classes, input_shape, denoise=True, attn=False):
+    denoise_path = '../project/dcae_weights.h5'
+    conv_path = '../project/cae_weights.h5'
+    path = denoise_path if denoise else conv_path
+
     lstm = LSTMAutoEncoder()
-    lstm.init_model(input_shape[1], compile=False)
-    m = lstm.get_final_model(input_shape[1], num_classes)
+    lstm.init_model(input_shape[0], compile=False, denoising=denoise, attention=attn, path=path)
+    m = lstm.get_final_model(input_shape[0], num_classes, use_weights=False)
     return m
 
 def mixed_paper(num_classes, input_shape):

@@ -12,10 +12,11 @@ from keras.layers import Flatten, TimeDistributed, LSTM, Bidirectional, Input, R
 
 class LSTMAutoEncoder:
 
-    def init_model(self, seq_len, denoising=True, load_conv_weights=True, path=None, train_conv=True, compile=True):
+    def init_model(self, seq_len, denoising=True, load_conv_weights=True, path=None, train_conv=True, compile=True,
+                   attention=True, bidirectional=True):
 
-        image_shape = (32, 32, 3)
-        HIDDEN_SIZE = 256
+        image_shape = (3, 32, 32)
+        HIDDEN_SIZE = 128
 
         if denoising:
             cae = DenoisingConvolutionalAutoEncoder()
@@ -30,7 +31,7 @@ class LSTMAutoEncoder:
         encoder = cae.get_encoder()
 
         inputs = Input(shape=tuple((seq_len,) + image_shape))
-        x = inputs
+        x = TimeDistributed(Permute((2,3,1)))(inputs)
 
         # encoder
         for l in encoder.layers:
@@ -39,21 +40,27 @@ class LSTMAutoEncoder:
             x = TimeDistributed(l)(x)
         x = TimeDistributed(Flatten())(x)
 
-        activations = Bidirectional(LSTM(HIDDEN_SIZE, activation='tanh', return_sequences=True), merge_mode='concat')(x)
+        if bidirectional:
+            activations = Bidirectional(LSTM(HIDDEN_SIZE, activation='tanh', return_sequences=attention), merge_mode='concat')(x)
+        else:
+            activations = LSTM(HIDDEN_SIZE, activation='tanh', return_sequences=attention)(x)
 
-        # attention mechanism
-        x = Flatten()(activations)
-        x = Dense(seq_len, activation='tanh')(x)
-        x = Activation('softmax')(x)
-        x = RepeatVector(HIDDEN_SIZE * 2)(x)
-        x = Permute([2, 1])(x)
-        attn = merge([activations, x], mode='mul')
-        attn = Lambda(lambda x: K.sum(x, axis=-2), output_shape=(HIDDEN_SIZE * 2,))(attn)
+        if attention:
+            # attention mechanism
+            x = Flatten()(activations)
+            x = Dense(seq_len, activation='tanh')(x)
+            x = Activation('softmax')(x)
+            x = RepeatVector(HIDDEN_SIZE * 2)(x)
+            x = Permute([2, 1])(x)
+            attn = merge([activations, x], mode='mul')
+            attn = Lambda(lambda x: K.sum(x, axis=-2), output_shape=(HIDDEN_SIZE * 2,))(attn)
 
-        self.Encoder = Model(inputs, attn)
+            self.Encoder = Model(inputs, attn)
+        else:
+            self.Encoder = Model(inputs, activations)
 
         # decoder
-        dec_input = Input(shape=(HIDDEN_SIZE * 2,))
+        dec_input = Input(shape=(HIDDEN_SIZE * (2 if bidirectional else 1),))
         y = RepeatVector(seq_len)(dec_input)
 
         y = Bidirectional(LSTM(HIDDEN_SIZE, activation='tanh', return_sequences=True), merge_mode='concat')(y)
@@ -85,8 +92,8 @@ class LSTMAutoEncoder:
 
     def get_final_model(self, seq_len, num_classes, use_weights=True):
         if use_weights:
-            self.load_from_weights()
-        image_shape = (32, 32, 3)
+            self.Model.load_weights('lstmae_weights.h5')
+        image_shape = (3, 32, 32)
         input = Input(shape=tuple((seq_len,) + image_shape))
         m = self.Encoder(input)
         m = Dense(num_classes, activation='softmax')(m)
@@ -99,3 +106,16 @@ class LSTMAutoEncoder:
     def load_from_weights(self, weights_path='lstmae_weights.h5'):
         self.init_model(334, compile=False)
         self.Model.load_weights(weights_path)
+
+import h5py
+import numpy as np
+
+if __name__ == '__main__':
+    h5_file = '/data/pgram_norm.hdf5'
+    data = []
+    with h5py.File(h5_file) as f:
+        data = np.array(f['data'])
+    lstm = LSTMAutoEncoder()
+    lstm.init_model(334, denoising=False, compile=True, train_conv=True)
+    lstm.Model.fit(data, data, validation_split=0.1, epochs=100, batch_size=16)
+    lstm.Model.save_weights('lstmae_weights.h5')
