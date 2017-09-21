@@ -4,6 +4,8 @@
 \usepackage{float}
 \usepackage{hyperref}
 \usepackage{mathtools}
+\usepackage{enumitem}
+\usepackage{subcaption}
 
 \graphicspath{ {./images/} }
 
@@ -23,6 +25,53 @@ Introduction content
 \section{Data}
 \subsection{Data Preprocessing}
 
+\subparagraph{Motivation} EEG measurements are in form of 2-dimensional time series, indicating the change of electrode voltage over time. Such data in raw form contains noise, and has a relatively high dimensionality. Usually such data is analyzed in the frequency domain. This reduces significantly the size of the samples, and makes the influence of noise smaller. We have employed a data transformation method proposed by Bashivan et al.\cite{learning_eeg_repr}, which preserves the spatial information contained in the original data - the location of the electrodes. Measurements are aggregated over smaller periods of time, to form images of activity over the surface of the scalp. Different frequency bands are portrayed in different channels of the images. A data sample is then represented as a sequence of images. One of the motivations behind transforming the data to such a format was the fact, that there exist many Neural Network architectures successful in processing image- and video-based data. Data in visual format is also easier to analyze, what might also be helpful when investigating whether the model has learned useful features, eg. by introspection of Convolutional Filters. %TODO ref introspection section
+
+\subparagraph{Implementation} Preprocessing has been done as follows:
+
+\begin{enumerate}
+ \item Raw sequences shorter than the longest one were padded with zeros.
+ \item Values were then (optionally) normalized by dividing by the highest found value.
+\end{enumerate}
+Data was then transformed into the frequency domain. For each trial:
+\begin{enumerate}[resume]
+ \item Fast Fourier Transform has been applied on fixed time windows of 1 second, with 0.5 second overlap 		with the previous window.
+ \item The data has then been separated into the three frequency bands - Theta (4-8 Hz), Alpha (8-13 Hz) and Beta (13-30 Hz).
+ \item For each band, sum of squared values have been computed
+\end{enumerate}
+Finally, transformation to images has been performed. For each time window:
+\begin{enumerate}[resume]
+ \item In order to project the data to images, oordinates of the electrodes have been transformed from 3D into 2D space using Azimuthal Equidistant Projection, a method used for geospatial purposes.
+ %TODO reference Snyder 1987
+ The motivation behind this is that the shape of the head, on which the electrodes are placed, is similar in shape to a sphere.
+ \item For each band, its corresponding image has then been constructed, using the newly obtained 2D points as pixel locations. Other pixel values have been interpolated with Clough-Tocher scheme.
+  %TODO reference Alfeld 1984
+ \item An RGB image has been constructed by using the bands' images as channel data.  
+\end{enumerate}
+
+\begin{figure}[h!]
+ \caption{a,b,c,d - examples of the image frames of the data. First three columns show the activity in the separate frequency bands - the RGB channels of the image. The final triple channel image is shown in the fourth column.}
+ \begin{subfigure}{.5\textwidth}
+   \centering
+   \includegraphics[width=1\linewidth]{2_cropped.png}
+   \caption{}
+ \end{subfigure}
+ \begin{subfigure}{.5\textwidth}
+   \centering
+   \includegraphics[width=1\linewidth]{4_cropped.png}
+   \caption{}
+ \end{subfigure}
+ \begin{subfigure}{.5\textwidth}
+   \centering
+   \includegraphics[width=1\linewidth]{6_cropped.png}
+   \caption{}
+ \end{subfigure}
+ \begin{subfigure}{.5\textwidth}
+   \centering
+   \includegraphics[width=1\linewidth]{9_cropped.png}
+   \caption{}
+ \end{subfigure}
+\end{figure}
 
 \section{Methods}
 \subsection{Baseline Methods}
