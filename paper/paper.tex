@@ -20,9 +20,26 @@
 \maketitle
 
 \section{Introduction}
-Introduction content
+\subsection{Motivation \& Background}
+intro
+\subsection{Related work}
 
 \section{Data}
+\subsection{Data origin \& structure}
+The data set was created at a sleep laboratory \textbf{(the name of the lab?)} in Canada and kindly shared with us for the purpose of this project. The researchers in the laboratory analyse and model brain activity, with the use of Electoencephalography (EEG). EEG is a noninvasive method to record electrical activity of the brain, by placing electrodes along the scalp. We received data from one experiment which was conducted in the laboratory and focused on modeling dream and sleep activity and correlating it with sleep reports. The participants were asked to come to the lab, perform a virtual tennis game, or spatial navigation task, or both and then to go to sleep. After a short period of time, the participants were waken up and asked to verbally describe what they dreamt about. In some session types, the full night sleeps were additionally recorded. For this particular experiment, 22-channel EEG setup was applied, with the sampling rate of 128 samples per second, and the electrodes were customized to the participants according to the International 10-20 system, as can be seen in the figure 1.
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.1]{eeg}
+	\caption{International 10-20 EEG placement system}
+\end{figure} 
+
+All of the EEG data we received was already cleaned, so no additional filtering, or artifact rejection was needed to be performed. An example of the EEG data before preprocessing can be seen in figure 2.  For each of the 26 subjects who participated in the experiment, 3 different groups of data were provided: dream reports, mental rehearsals and verbal reports.  Dream reports contained EEG data during the short naps, mental rehearsals contained EEG data of when the participants were asked to repeat the same task they did in their minds (just to think about doing the task without actually doing it). Verbal reports were texts with the description of a dream provided by the participants after waking up. Each instance in the data was annotated with a label of the session and task type (tennis, spatial navigation, or both).
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.2]{eeg_ex}
+	\caption{The sample of EEG from dream reports from one of the participants. EEG traces (horizontal: time in seconds; vertical: channel locations).}
+\end{figure} 
+
 \subsection{Data Preprocessing}
 
 \subparagraph{Motivation} EEG measurements are in form of 2-dimensional time series, indicating the change of electrode voltage over time. Such data in raw form contains noise, and has a relatively high dimensionality. Usually such data is analyzed in the frequency domain. This reduces significantly the size of the samples, and makes the influence of noise smaller. We have employed a data transformation method proposed by Bashivan et al.\cite{learning_eeg_repr}, which preserves the spatial information contained in the original data - the location of the electrodes. Measurements are aggregated over smaller periods of time, to form images of activity over the surface of the scalp. Different frequency bands are portrayed in different channels of the images. A data sample is then represented as a sequence of images. One of the motivations behind transforming the data to such a format was the fact, that there exist many Neural Network architectures successful in processing image- and video-based data. Data in visual format is also easier to analyze, what might also be helpful when investigating whether the model has learned useful features, eg. by introspection of Convolutional Filters. %TODO ref introspection section
