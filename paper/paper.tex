@@ -53,7 +53,7 @@ All of the EEG data we received was already cleaned, so no additional filtering,
 
 \subsection{Data Preprocessing}
 
-\subparagraph{Motivation} EEG measurements are in form of 2-dimensional time series, indicating the change of electrode voltage over time. Such data in raw form contains noise, and has a relatively high dimensionality. Usually such data is analyzed in the frequency domain. This reduces significantly the size of the samples, and makes the influence of noise smaller. We have employed a data transformation method proposed by Bashivan et al.\cite{learning_eeg_repr}, which preserves the spatial information contained in the original data - the location of the electrodes. Measurements are aggregated over smaller periods of time, to form images of activity over the surface of the scalp. Different frequency bands are portrayed in different channels of the images. A data sample is then represented as a sequence of images. One of the motivations behind transforming the data to such a format was the fact, that there exist many Neural Network architectures successful in processing image- and video-based data. Data in visual format is also easier to analyze, what might also be helpful when investigating whether the model has learned useful features, eg. by introspection of Convolutional Filters. %TODO ref introspection section
+\subparagraph{Motivation} EEG measurements are in form of 2-dimensional time series, indicating the change of electrode voltage over time. Such data in raw form contains noise, and has a relatively high dimensionality. Usually such data is analyzed in the frequency domain. This reduces significantly the size of the samples, and makes the influence of noise smaller. We have employed a data transformation method proposed by Bashivan et al.\cite{learning_eeg_repr}, which preserves the spatial information contained in the original data - the location of the electrodes. Measurements are aggregated over smaller periods of time, to form images of activity over the surface of the scalp. Different frequency bands are portrayed in different channels of the images. A data sample is then represented as a sequence of images. One of the motivations behind transforming the data to such a format was the fact, that there exist many Neural Network architectures successful in processing image- and video-based data. Data in visual format is also easier to analyze, what might also be helpful when investigating whether the model has learned useful features, eg. by introspection of Convolutional Filters (see Figure \ref{fig:inputs_optimized}).
 
 \subparagraph{Implementation} Preprocessing has been done as follows:
 
@@ -69,11 +69,9 @@ Data was then transformed into the frequency domain. For each trial:
 \end{enumerate}
 Finally, transformation to images has been performed. For each time window:
 \begin{enumerate}[resume]
- \item In order to project the data to images, oordinates of the electrodes have been transformed from 3D into 2D space using Azimuthal Equidistant Projection, a method used for geospatial purposes.
- %TODO reference Snyder 1987
+ \item In order to project the data to images, oordinates of the electrodes have been transformed from 3D into 2D space using Azimuthal Equidistant Projection, a method used for geospatial purposes \cite{snyder}.
  The motivation behind this is that the shape of the head, on which the electrodes are placed, is similar in shape to a sphere.
- \item For each band, its corresponding image has then been constructed, using the newly obtained 2D points as pixel locations. Other pixel values have been interpolated with Clough-Tocher scheme.
-  %TODO reference Alfeld 1984
+ \item For each band, its corresponding image has then been constructed, using the newly obtained 2D points as pixel locations. Other pixel values have been interpolated with Clough-Tocher scheme \cite{alfeld}.
  \item An RGB image has been constructed by using the bands' images as channel data.  
 \end{enumerate}
 
@@ -142,7 +140,7 @@ We opted to continue using the same filter size and stride, but test different c
 As for the activation function, after consulting the relevant literature, we decided to evaluate the performance of ELUs in lieu of the ReLU activations used in the original paper. The reasoning behind this is that dead filters may be due to the fact that the gradient of ReLU for negative inputs is zero, and thus no learning can occur for these inputs. This causes filters to “die” and simply not be updated in the training phase. In contrast, the ELU has an exponential activation value for values below zero, which allows for a gradient, and thus fewer “dead” filters. After making these modifications to the convolutional autoencoder, the number of dead filters was noticeably reduced.
 \begin{figure}
 \includegraphics{inputs_optimized}
-\caption{Sample of maximized inputs for individual filters after modifications. Almost every filter now appears to have learned some representation of the input.}
+\caption{Sample of maximized inputs for individual filters after modifications. Almost every filter now appears to have learned some representation of the input.}\label{fig:inputs_optimized}
 \end{figure}
 \subparagraph{Denoising}
 In an attempt to add an additional level of regularization and improve generalization, we augmented our network to add denoising. In addition to the usual benefits of denoising for neural networks, we theorized that since EEG data is inherently noisy, adding a denoising component may prove especially useful in our case. As our noise component we selected simple Gaussian noise, which was added to the inputs of the autoencoder for training, with the unmodified original image as the target output. After experimenting with the variance of the noise parameter, we found that a variance of 0.0 1 provided the best reconstruction loss on the test set, although the improvement on the test set was marginal at best. 
@@ -181,6 +179,17 @@ Discussion content
 	Ho, Tin Kam (1995)
 	\textit{Random Decision Forests}. 
 	Proceedings of the 3rd International Conference on Document Analysis and Recognition, Montreal, QC, 14–		16 August 1995. pp. 278–282
+
+	\bibitem{snyder}
+	Snyder, J.P. (1987) 
+	\textit{Map Projections - A Working Manual}. 
+	U.S. Geological Survey Professional Paper 1395. U.S. Govt. Print.
+	Off., Washington DC
+	
+	\bibitem{alfeld}
+	P. Alfeld (1984)
+	\textit{A bivariate $C^2$ Clough-Tocher interpolant.} 
+	Computer Aided Geometric Design
 
 	\bibitem{roberts}
 	Roberts S, Tarassenko L (1995).
