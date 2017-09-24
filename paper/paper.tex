@@ -6,6 +6,10 @@
 \usepackage{mathtools}
 \usepackage{enumitem}
 \usepackage{subcaption}
+\usepackage{geometry}
+ \geometry{
+	left=20mm,right=20mm,%
+	bindingoffset=0mm, top=20mm,bottom=20mm}
 
 \graphicspath{ {./images/} }
 
@@ -19,25 +23,32 @@
 
 \maketitle
 
+\section*{Abstract}
+abstract content
+
 \section{Introduction}
-\subsection{Motivation \& Background}
-intro
-\subsection{Related work}
+\subparagraph{Motivation \& Background} Over the last decades, neural networks have become an extremely popular approach for the data analysis in various fields. Machine learning techniques have proven to play a crucial role in many application areas, because they possess a high classification power, are able to compute high-level abstractions of data, and provide insights into hidden relationships among the data. This is especially important in the field of neuroscience, medical signal and image processing, since the usual real-word uncertainties and incomplete information in the data set are often compounded by a poor understanding of the physical mechanisms by which the data is generated and subjective evaluation of the data by a human observer \cite{roberts}. Electroencephalography (EEG) data analysis relies a lot on statistics, and one of the challenges in modeling cognitive events from EEG data is finding representations that are invariant to inter- and intra-subject differences, therefore, machine learning methods are a crucial tool for EEG-based research. There are many clinical medical applications which include EEG-based brain-computer interface systems, or devices that are intended to change the lives of patients with disabilities, and a lot of research is being done in the area. 
+
+Many recent studies \cite{cecotti, shamwell,driver} investigated the application of convolutional neural networks (ConvNets), which are neural networks that can learn local patterns in data by using convolutions as their key component, in the field of EEG analysis. For example, Schirrmeister et al. \cite{schirrmeister} showed how to design and train deep ConvNets with a range of different architectures to achieve the prominent results in EEG decoding tasks, by applying recent advances from the machine learning field and focusing on learning from the raw data of EEG.
+
+Sleep analysis still remains the most unexplored area of neuroscience. Despite the fact that a lot of scientists in the field of sleep studies do not trust innovative automatic approaches, neural networks have been successfully applied to identify different sleep stages \cite{sleep} and their applications for extracting categorical cognitive sleep information are a huge focus of on-going research. Baumgart-Schmitt et al. were able to provide a reasonable agreement of the automatically generated profiles using only one EEG-channel with the profiles scored by sleep-experts on the basis of at least three EEG-channels \cite{somnology}, by applying the system SASCIA (Sleep Analysis System to Challenge Innovative Artificial Networks) to automate the sleep stage scoring. 
+
+The state-of-the-art approach to analysing and modeling EEG during sleep recordings was presented by Bashivan et al. in the paper "Learning Representations from EEG with Deep Recurrent-Convolutional Neural Networks" \cite{learning_eeg_repr}. Bashivan et al. used a novel approach, transforming EEG data into a sequence of multi-spectral images which preserve spatial information, which, in its turn, is an important property of EEG methodology. The proposed approach showed significant improvements in accuracy of the performance on the cognitive load classification task.
 
 \section{Data}
 \subsection{Data origin \& structure}
-The data set was created at a sleep laboratory \textbf{(the name of the lab?)} in Canada and kindly shared with us for the purpose of this project. The researchers in the laboratory analyse and model brain activity, with the use of Electoencephalography (EEG). EEG is a noninvasive method to record electrical activity of the brain, by placing electrodes along the scalp. We received data from one experiment which was conducted in the laboratory and focused on modeling dream and sleep activity and correlating it with sleep reports. The participants were asked to come to the lab, perform a virtual tennis game, or spatial navigation task, or both and then to go to sleep. After a short period of time, the participants were waken up and asked to verbally describe what they dreamt about. In some session types, the full night sleeps were additionally recorded. For this particular experiment, 22-channel EEG setup was applied, with the sampling rate of 128 samples per second, and the electrodes were customized to the participants according to the International 10-20 system, as can be seen in the figure 1.
-\begin{figure}
+The data set was created at a sleep laboratory \textbf{(ask:the name of the lab?)} in Canada and kindly shared with us for the purpose of this project. The researchers in the laboratory analyse and model brain activity, with the use of Electoencephalography (EEG). EEG is a noninvasive method to record electrical activity of the brain, by placing electrodes along the scalp. We received data from one experiment which was conducted in the laboratory and focused on modeling dream and sleep activity and correlating it with sleep reports. The participants were asked to come to the lab, perform a virtual tennis game, or spatial navigation task, or both and then, directly after that, to go to sleep. After a short period of time, the participants were waken up and asked to verbally describe what they dreamt about. In some session types, the full night sleeps were additionally recorded. For this particular experiment, 22-channel EEG setup was applied, with the sampling rate of 128 samples per second, and the electrodes were customized to the participants according to the International 10-20 system, as can be seen in the figure 1.
+\begin{figure}[!ht]
 	\centering
 	\includegraphics[scale=0.1]{eeg}
 	\caption{International 10-20 EEG placement system}
 \end{figure} 
 
-All of the EEG data we received was already cleaned, so no additional filtering, or artifact rejection was needed to be performed. An example of the EEG data before preprocessing can be seen in figure 2.  For each of the 26 subjects who participated in the experiment, 3 different groups of data were provided: dream reports, mental rehearsals and verbal reports.  Dream reports contained EEG data during the short naps, mental rehearsals contained EEG data of when the participants were asked to repeat the same task they did in their minds (just to think about doing the task without actually doing it). Verbal reports were texts with the description of a dream provided by the participants after waking up. Each instance in the data was annotated with a label of the session and task type (tennis, spatial navigation, or both).
-\begin{figure}
+All of the EEG data we received was already cleaned, so no additional filtering, or artifact rejection was needed to be performed. An example of the EEG data before preprocessing can be seen in figure 2.  For each of the 26 subjects who participated in the experiment \textbf{(look up: how many trials?)}, 3 different groups of data were provided: dream reports, mental rehearsals and verbal reports.  Dream reports contained EEG data during the short naps, mental rehearsals contained EEG data of when the participants were asked to repeat the same task they did in their minds (to think about doing the task without actually doing it). Verbal reports consisted of texts with the description of a dream provided by the participants after waking up. Each instance in the data was annotated with a label of the session type (tennis, spatial navigation, or both).
+\begin{figure}[!ht]
 	\centering
 	\includegraphics[scale=0.2]{eeg_ex}
-	\caption{The sample of EEG from dream reports from one of the participants. EEG traces (horizontal: time in seconds; vertical: channel locations).}
+	\caption{The sample of EEG data from dream reports from one of the participants. EEG traces (horizontal: time in seconds; vertical: channel locations).}
 \end{figure} 
 
 \subsection{Data Preprocessing}
@@ -67,7 +78,6 @@ Finally, transformation to images has been performed. For each time window:
 \end{enumerate}
 
 \begin{figure}[h!]
- \caption{a,b,c,d - examples of the image frames of the data. First three columns show the activity in the separate frequency bands - the RGB channels of the image. The final triple channel image is shown in the fourth column.}
  \begin{subfigure}{.5\textwidth}
    \centering
    \includegraphics[width=1\linewidth]{2_cropped.png}
@@ -88,6 +98,7 @@ Finally, transformation to images has been performed. For each time window:
    \includegraphics[width=1\linewidth]{9_cropped.png}
    \caption{}
  \end{subfigure}
+ \caption{a,b,c,d - examples of the image frames of the data. First three columns show the activity in the separate frequency bands - the RGB channels of the image. The final triple channel image is shown in the fourth column.}
 \end{figure}
 
 \section{Methods}
@@ -135,13 +146,13 @@ As for the activation function, after consulting the relevant literature, we dec
 \end{figure}
 \subparagraph{Denoising}
 In an attempt to add an additional level of regularization and improve generalization, we augmented our network to add denoising. In addition to the usual benefits of denoising for neural networks, we theorized that since EEG data is inherently noisy, adding a denoising component may prove especially useful in our case. As our noise component we selected simple Gaussian noise, which was added to the inputs of the autoencoder for training, with the unmodified original image as the target output. After experimenting with the variance of the noise parameter, we found that a variance of 0.0 1 provided the best reconstruction loss on the test set, although the improvement on the test set was marginal at best. 
-\begin{figure}
+\begin{figure}[!ht]
 \includegraphics{denoising}
 \caption{A representation of the denoising process. Left: original image; middle: input image with additional noise (variance=0.01); right: image reconstructed by autoencoder}
 \end{figure}
 \subparagraph{Modified cost function}
 Due to the “black” areas of the image, where the EEG activation level is 0, the autoencoder is forced to learn the useless black border of the image. This wastes training time and resources. Thus a custom cost function was implemented to remove these areas from training. A mask area was identified for the border pixels, and the cost value was set to zero for these pixels. This greatly improved training speed and accuracy.
-\begin{figure}
+\begin{figure}[!ht]
 \includegraphics{mask}
 \caption{Representation of output with mask (left) vs. output after training without modified cost function (right). Even after the relevant data in the image has been encoded by the autoencoder, it is still in the process of learning the black border around the image.}
 \end{figure}
@@ -156,10 +167,10 @@ Due to the “black” areas of the image, where the EEG activation level is 0, 
 \end{tabular}
 \end{center}
 
-\section{Discussion}
+\section{Discussion \& Conclusion}
 Discussion content
 
-\begin{thebibliography}{9}
+\begin{thebibliography}{99}
 
 	\bibitem{learning_eeg_repr} 
 	Bashivan  P,  Rish  I,  Yeasin  M,  Codella  N  (2016). 
@@ -170,6 +181,43 @@ Discussion content
 	Ho, Tin Kam (1995)
 	\textit{Random Decision Forests}. 
 	Proceedings of the 3rd International Conference on Document Analysis and Recognition, Montreal, QC, 14–		16 August 1995. pp. 278–282
+
+	\bibitem{roberts}
+	Roberts S, Tarassenko L (1995).
+	\textit{Automated sleep EEG analysis using an RBF network}.
+	In Applications of neural networks (pp. 305-320). Springer US.
+
+	\bibitem{schirrmeister}
+	Schirrmeister R, Springenberg J, Fiederer L, Glasstetter M, Eggensperger K, Tangermann M, Ball T (2017). 
+	\textit{Deep learning with convolutional neural networks for EEG decoding and visualization}.
+	In Human brain mapping.
+
+	\bibitem{sleep}
+	Laengkvist M, Karlsson L, Loutfi A (2012).
+	\textit{Sleep stage classification using unsupervised feature learning}.
+	In Advances in Artificial Neural Systems, 2012, 5.
+
+	\bibitem{somnology}
+	Baumgart-Schmitt R, Herrmann W, Eilers R (1998). 
+	\textit{On the use of neural network techniques to analyze sleep EEG data}.
+	In Neuropsychobiology, 37(1), 49-58.
+
+	\bibitem{cecotti}
+	Cecotti H, Graser A (2011).
+	\textit{Convolutional neural networks for P300 detection with application to brain-computer interfaces}. 
+	In IEEE Trans Pattern Anal Mach Intell 33:433–445.
+
+	\bibitem{shamwell}
+	Shamwell J, Lee H, Kwon H, Marathe AR, Lawhern V, Nothwang W (2016).
+	\textit{Single-trial EEG RSVP classification using convolutional neural networks}. 
+	In George T, Dutta AK, Islam MS, editors. SPIE Defense+ Security, Vol. 9836. International Society for Optics and Photonics.
+
+	\bibitem{driver}
+	Hajinoroozi M, Mao Z, Jung T-P, Lin C-T, Huang Y (2016).
+	\textit{EEG-based prediction of driver's cognitive performance by deep convolutional neural network}. 
+	In Signal Process Image Commun 47:549–555.
+
+
 	
 \end{thebibliography}
 \end{document}
