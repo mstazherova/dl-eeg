@@ -127,20 +127,20 @@ Our own Model consisted of the Decoder of a trained Autoencoder for the pretrain
 \subsection{Convolutional Autoencoder}
 Our approach of utilizing a convolutional autoencoder required some tuning and experimentation to find the optimal set of configurations and parameters. The first stage of tuning was to find the best activation function along with the optimal number of layers and filters, then add features such as denoising.
 \subparagraph{Choosing number of layers and filters}
-Bashivan et al. tested a variety of configurations for the number of layers and filters of the convolutional layers of their models. They discovered that the configuration that produced the optimal results was a set of 4 convolutions with 32 filters followed by a maxpooling layer, then a set of 2 convolutions with 64 filters followed by a maxpool, and finally one convolution with 128 filters followed by a maxpool. The size of each filter was 3x3 with a stride of 1 pixel. The activation function used was a standard ReLU. After evaluating this configuration, we found that while the autoencoder was able to reconstruct the original input EEG image with fairly good accuracy, the training time was somewhat large, and after some analysis of the filters of the convolutional layers we found that the majority were empty, or “dead” filters. 
+Bashivan et al. tested a variety of configurations for the number of layers and filters of the convolutional layers of their models. They discovered that the configuration that produced the optimal results was a set of 4 convolutions with 32 filters followed by a maxpooling layer, then a set of 2 convolutions with 64 filters followed by a maxpool, and finally one convolution with 128 filters followed by a maxpool. The size of each filter was 3x3 with a stride of 1 pixel. The activation function used was a standard ReLU. After evaluating this configuration, we found that while the autoencoder was able to reconstruct the original input EEG image with fairly good accuracy, the training time was somewhat large, and after some analysis of the filters of the convolutional layers we found that the majority were empty, or Â“deadÂ” filters. 
 \begin{figure}[!ht]
 	\centering
     \includegraphics[scale=0.6]{inputs_orig}
     \caption{Sample of maximized inputs for individual filters in the first layer of convolutions using optimal network configuration taken from Bashivan et al. Activation maps were produced by feeding empty input (an image with values of 0 for each pixel) to the network. Inputs were then iteratively tuned using gradient ascent to find the input which maximizes the activation. Many filters appear to be mostly gray and near 0, leading to the conclusion that these filters had effectively not learned anything. A similar problem was encountered in every convolutional layer.}
 \end{figure}
-We opted to continue using the same filter size and stride, but test different configurations for the convolutional layer and filter numbers. In order to reduce the number of dead filters, we decided to first reduce the number of filters, and then to try some alternative activation functions specialized to combat the “dead filter” problem. After evaluating a number of different layer configurations, we found that using one layer of 32 filters, followed by one layer of 64 filters, and finally one layer of 128 filters produced the optimal results in terms of reconstructing the input. 
+We opted to continue using the same filter size and stride, but test different configurations for the convolutional layer and filter numbers. In order to reduce the number of dead filters, we decided to first reduce the number of filters, and then to try some alternative activation functions specialized to combat the Â“dead filterÂ” problem. After evaluating a number of different layer configurations, we found that using one layer of 32 filters, followed by one layer of 64 filters, and finally one layer of 128 filters produced the optimal results in terms of reconstructing the input. 
 \subparagraph{Activation function}
 \begin{figure}[!ht]
     \centering
     \includegraphics[scale=0.75]{elu}
     \caption{ELU activation function. The exponential function for inputs below zero allows for a gradient.}
 \end{figure}
-As for the activation function, after consulting the relevant literature, we decided to evaluate the performance of ELUs in lieu of the ReLU activations used in the original paper. The reasoning behind this is that dead filters may be due to the fact that the gradient of ReLU for negative inputs is zero, and thus no learning can occur for these inputs. This causes filters to “die” and simply not be updated in the training phase. In contrast, the ELU has an exponential activation value for values below zero, which allows for a gradient, and thus fewer “dead” filters. After making these modifications to the convolutional autoencoder, the number of dead filters was noticeably reduced.
+As for the activation function, after consulting the relevant literature, we decided to evaluate the performance of ELUs in lieu of the ReLU activations used in the original paper. The reasoning behind this is that dead filters may be due to the fact that the gradient of ReLU for negative inputs is zero, and thus no learning can occur for these inputs. This causes filters to Â“dieÂ” and simply not be updated in the training phase. In contrast, the ELU has an exponential activation value for values below zero, which allows for a gradient, and thus fewer Â“deadÂ” filters. After making these modifications to the convolutional autoencoder, the number of dead filters was noticeably reduced.
 \begin{figure}
     \centering
     \includegraphics{inputs_optimized}
@@ -154,20 +154,20 @@ In an attempt to add an additional level of regularization and improve generaliz
     \caption{A representation of the denoising process. Left: original image; middle: input image with additional noise (variance=0.01); right: image reconstructed by autoencoder}
 \end{figure}
 \subparagraph{Modified cost function}
-Due to the “black” areas of the image, where the EEG activation level is 0, the autoencoder is forced to learn the useless black border of the image. This wastes training time and resources. Thus a custom cost function was implemented to remove these areas from training. A mask area was identified for the border pixels, and the cost value was set to zero for these pixels. This greatly improved training speed and accuracy.
+Due to the Â“blackÂ” areas of the image, where the EEG activation level is 0, the autoencoder is forced to learn the useless black border of the image. This wastes training time and resources. Thus a custom cost function was implemented to remove these areas from training. A mask area was identified for the border pixels, and the cost value was set to zero for these pixels. This greatly improved training speed and accuracy.
 \begin{figure}[!ht]
     \centering
     \includegraphics[scale=0.55]{mask}
     \caption{Representation of output with mask (left) vs. output after training without modified cost function (right). Even after the relevant data in the image has been encoded by the autoencoder, it is still in the process of learning the black border around the image.}
 \end{figure}
 \subsection{Bidirectional LSTM}
-For our classification we used several layers of LSTMs, because the temporal dependencies of our data are little understood. We wanted to allow the model to classify according to anomalies or structure of the sequence. Unidirectional and bidirectional LSTMs were tried, the latter ones learn much faster and more. This is probably due to uncertainty where in the sequence the rich part of the data is, unlikelihood that is at similar positions and the fact that the data is not temporally resolving but just developing so it can be viewed equally from both directions. Several number of layers and dropout rates were tried, $2$ layers and a $0.1$ dropout scored highest. These relatively small numbers could both be due to the small dataset. A little improvement was gained by replacing hard-sigmoid activation for the input with sigmoid activation. All models were trained for $50$ epochs over the whole training set. The models were first trained without the weights of the decoder and then compared to the model with trained decoder.
+For our classification we used several layers of LSTMs, because the temporal dependencies of our data are little understood. We wanted to allow the model to classify according to anomalies or structure of the sequence. Unidirectional and bidirectional LSTMs were tried, the latter ones learn much faster and more. This is probably due to uncertainty where in the sequence the rich part of the data is, unlikelihood that is at similar positions and the fact that the data is not temporally resolving but just developing so it can be viewed equally from both directions. Several number of layers and dropout rates were tried, $2$ layers and a $0.1$ dropout scored highest. These relatively small numbers could both be due to the small dataset. A little improvement was gained by replacing hard-sigmoid activation for the input with sigmoid activation. All models were trained for $50$ epochs over the whole training set. The models were first trained without the weights of the decoder and then compared to the model with trained encoder.
 \subsection{Results}
 \subsubsection{Evaluation}
-Because of a very small amount of data available (766 samples in total), we have decided to use n-fold cross-validation (with \textit{n=8}) as the evaluation method. The data has been shuffled before being split into folds. For each of the $n$ runs, weights for the model with the lowest validation loss have been saved. The model's performance has then been measured on the validation fold. Final accuracy has then been computed as an average over all the runs.
-Cross-validation has also been used to evaluate the baseline methods (per each method, per each configuration of parameters).
+Because of a very small amount of data available (766 samples in total), we decided to use n-fold cross-validation (with \textit{n=8}) as the evaluation method. The data was shuffled before being split into folds. For each of the $n$ runs, weights for the model with the lowest validation loss were saved. The model's performance was measured on the validation fold. Final accuracy has then been computed as an average over all the runs.
+Cross-validation was also used to evaluate the baseline methods (per each method, per each configuration of parameters).
 \newline
-The Neural Network models have been trained on mini batches of size 32, using Adam \cite{Adam} as the optimization method.
+The Neural Network models were trained on mini batches of size 32, using Adam \cite{Adam} as the optimization method.
 \subsubsection{Baseline Models}
 \begin{center}
 \begin{tabular}{ c|c|c } 
@@ -196,7 +196,7 @@ The Neural Network models have been trained on mini batches of size 32, using Ad
 \begin{tabular}{ c|c|c } 
  Model & No. parameters & Accuracy \\ 
  \hline
- 2 layer bidirectional LSTM with 0.2 dropout & - & 89.21\% $\pm \%$ \\
+ 2 layer bidirectional LSTM with 0.1 dropout & - & 89.21\% $\pm \%$ \\
 \end{tabular}
 \end{center}
 
@@ -213,7 +213,7 @@ We have also conducted a small test to check how our network architecture perfor
 	\bibitem{random_forests} 
 	Ho, Tin Kam (1995)
 	\textit{Random Decision Forests}. 
-	Proceedings of the 3rd International Conference on Document Analysis and Recognition, Montreal, QC, 14–		16 August 1995. pp. 278–282
+	Proceedings of the 3rd International Conference on Document Analysis and Recognition, Montreal, QC, 14Â–		16 August 1995. pp. 278Â–282
 
 	\bibitem{snyder}
 	Snyder, J.P. (1987) 
@@ -249,7 +249,7 @@ We have also conducted a small test to check how our network architecture perfor
 	\bibitem{cecotti}
 	Cecotti H, Graser A (2011).
 	\textit{Convolutional neural networks for P300 detection with application to brain-computer interfaces}. 
-	In IEEE Trans Pattern Anal Mach Intell 33:433–445.
+	In IEEE Trans Pattern Anal Mach Intell 33:433Â–445.
 
 	\bibitem{shamwell}
 	Shamwell J, Lee H, Kwon H, Marathe AR, Lawhern V, Nothwang W (2016).
@@ -259,10 +259,10 @@ We have also conducted a small test to check how our network architecture perfor
 	\bibitem{driver}
 	Hajinoroozi M, Mao Z, Jung T-P, Lin C-T, Huang Y (2016).
 	\textit{EEG-based prediction of driver's cognitive performance by deep convolutional neural network}. 
-	In Signal Process Image Commun 47:549–555.
+	In Signal Process Image Commun 47:549Â–555.
 	
 	\bibitem{LSTM}
-	Hochreiter, Sepp and Schmidhuber, Jürgen (1997).
+	Hochreiter, Sepp and Schmidhuber, JÃ¼rgen (1997).
 	\textit{Long Short-term Memory}
 	In Neural Computation 9:1735-80
 
@@ -275,7 +275,7 @@ We have also conducted a small test to check how our network architecture perfor
 \end{thebibliography}
 \end{document}
 
-    © 2017 GitHub, Inc.
+    Â© 2017 GitHub, Inc.
     Terms
     Privacy
     Security
