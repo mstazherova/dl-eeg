@@ -123,7 +123,12 @@ An ensemble classification method. A number of Decision Trees is being fit on di
 A model has been trained, using the $l_1$ as the norm for penalization, for each of the following penalization parameters \textbf{C}: \{0.01, 0.1, 1, 10, 100, 1000\}.
 
 \section{Experiments and Results}
-Our own Model consisted of the Decoder of a trained Autoencoder for the pretrained images and a Long short-Term memory\cite{LSTM} network that classifies these representations of the Decoder. \textbf{DOES ANYBODY HAVE A GRAPHIC OF OUR WHOLE ARCHITECTURE?}
+Our own Model consisted of the encoder of a trained autoencoder for the pretrained images and a Long short-Term memory\cite{LSTM} network that classifies these representations of the decoder (see Figure \ref{fig:net_arch}).
+\begin{figure}[!ht]
+    \centering
+    \includegraphics{network}
+    \caption{architecture of the classifier network (left) and autoencoder (right)}\label{fig:net_arch}
+\end{figure}
 \subsection{Convolutional Autoencoder}
 Our approach of utilizing a convolutional autoencoder required some tuning and experimentation to find the optimal set of configurations and parameters. The first stage of tuning was to find the best activation function along with the optimal number of layers and filters, then add features such as denoising.
 \subparagraph{Choosing number of layers and filters}
