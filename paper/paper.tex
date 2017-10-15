@@ -162,7 +162,11 @@ Due to the “black” areas of the image, where the EEG activation level is 0, the 
 \subsection{Bidirectional LSTM}
 For our classification we used several layers of LSTMs, because the temporal dependencies of our data are little understood. We wanted to allow the model to classify according to anomalies or structure of the sequence. Unidirectional and bidirectional LSTMs were tried, the latter ones learn much faster and more. This is probably due to uncertainty where in the sequence the rich part of the data is, unlikelihood that is at similar positions and the fact that the data is not temporally resolving but just developing so it can be viewed equally from both directions. Several number of layers and dropout rates were tried, $2$ layers and a $0.1$ dropout scored highest. These relatively small numbers could both be due to the small dataset. A little improvement was gained by replacing hard-sigmoid activation for the input with sigmoid activation. All models were trained for $50$ epochs over the whole training set. The models were first trained without the weights of the decoder and then compared to the model with trained decoder.
 \subsection{Results}
-We used 8-fold validation for our results.
+\subsubsection{Evaluation}
+Because of a very small amount of data available (766 samples in total), we have decided to use n-fold cross-validation (with \textit{n=8}) as the evaluation method. The data has been shuffled before being split into folds. For each of the $n$ runs, weights for the model with the lowest validation loss have been saved. The model's performance has then been measured on the validation fold. Final accuracy has then been computed as an average over all the runs.
+Cross-validation has also been used to evaluate the baseline methods (per each method, per each configuration of parameters).
+\newline
+The Neural Network models have been trained on mini batches of size 32, using Adam \cite{Adam} as the optimization method.
 \subsubsection{Baseline Models}
 \begin{center}
 \begin{tabular}{ c|c|c } 
@@ -261,6 +265,10 @@ Discussion content
 	\textit{Long Short-term Memory}
 	In Neural Computation 9:1735-80
 
+	\bibitem{Adam}
+	Kingma, D. P. \& Ba, J. (2014). 
+	\textit{Adam: A Method for Stochastic Optimization.} 
+	CoRR, abs/1412.6980. 
 
 	
 \end{thebibliography}
