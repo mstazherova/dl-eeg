@@ -160,7 +160,7 @@ Due to the “black” areas of the image, where the EEG activation level is 0, the 
     \caption{Representation of output with mask (left) vs. output after training without modified cost function (right). Even after the relevant data in the image has been encoded by the autoencoder, it is still in the process of learning the black border around the image.}
 \end{figure}
 \subsection{Bidirectional LSTM}
-For our classification we used several layers of LSTMs, because the temporal dependencies of our data are little understood. We wanted to allow the model to classify according to anomalies or structure of the sequence. Unidirectional and bidirectional LSTMs were tried, the latter ones learn much faster and more. This is probably due to uncertainty where in the sequence the rich part of the data is, unlikelihood that is at similar positions and the fact that the data is not temporally resolving but just developing so it can be viewed equally from both directions. Several number of layers and dropout rates were tried, $2$ layers and a $0.1$ dropout scored highest. These relatively small numbers could both be due to the small dataset. A little improvement was gained by replacing hard-sigmoid activation for the input with sigmoid activation. All models were trained for $50$ epochs over the whole training set. The models were first trained without the weights of the decoder and then compared to the model with trained decoder.
+For our classification we used several layers of LSTMs, because the temporal dependencies of our data are little understood. Unidirectional and bidirectional LSTMs were tried, the latter ones learn much faster and more. Bidirectionality was implemented by simply merging the final hidden states of a normal LSTM with an LSTM with inputs reversed. Several number of layers and dropout rates were tried, $2$ layers and a $0.1$ dropout scored highest. These relatively small numbers could both be due to the small dataset. A little improvement was gained by replacing hard-sigmoid activation for the input with sigmoid activation. All models were trained for $50$ epochs over the whole training set. The models were first trained without the weights of the decoder and then compared to the model with trained decoder.
 \subsection{Results}
 \subsubsection{Evaluation}
 Because of a very small amount of data available (766 samples in total), we have decided to use n-fold cross-validation (with \textit{n=8}) as the evaluation method. The data has been shuffled before being split into folds. For each of the $n$ runs, weights for the model with the lowest validation loss have been saved. The model's performance has then been measured on the validation fold. Final accuracy has then been computed as an average over all the runs.
@@ -200,8 +200,17 @@ The Neural Network models have been trained on mini batches of size 32, using Ad
 \end{center}
 
 \section{Discussion \& Conclusion}
-Discussion content
+Given the results, there is strong evidence that our modifications led to a significant improvement in classification accuracy over the model taken from Bashivan et al. It appears that the largest improvement comes from utilizing a bidirectional LSTM component, improving accuracy by over 65\%. The reason for this is most likely that context is very important in determining useful EEG segments for classification. By having access only to the forward context, unidirectional LSTMs do not have access to the future of the input sequence at each time step, thus they are less optimal at recognizing which features from the current input and hidden state are useful to pass on to the next step. It seems logical that mental processes produce exactly the type of sequences where the past and future context are equally important in determining which features are useful for classification. 
 
+In addition, our results indicate that pretraining has led to some improvement over non-pretrained models. In the case of the 2 layer bidirectional LSTM with 0.2 dropout, adding pretraining improved classification accuracy by almost 10\%. There are probably multiple reasons for this. First of all, pretraining has long been known to be an effective form of regularization, decreasing generalization error and preventing overfitting \cite{pretraining}. But beyond this, pretraining initializes training in a different area of the problem space than without any pretraining, and this area has been shown to generally be less prone to extreme variance \cite{pretraining}. Especially for a task such as EEG classification, where the data already has a high variance due to "noise" in the recording process and in external factors such as differences between participants, mental states and possible background mental processes, the problem space probably also contains areas with high variance, which can more easily lead the training to non-optimal local minima. And beyond these properties, pretraining with a convolutional autoencoder allowed us to tune the hyperparameters of the convolutional part of our model separately from the rest of the model, rather than tuning only after training the whole model, which allowed us to more quickly choose the best parameters. 
+
+Dropout is also known to work as a form of regularization, and given our results it appears that it also leads to an improvement in the results of the model, up to a certain point. However, too high a level of dropout degrades the performance of the model. This is probably because when the level of dropout is too high, there is not enough capacity in the model to learn the representations. 
+\subsection{Further improvements}
+Given the success of pretraining, it is possible that some additional pretraining would also be useful in improving accuracy. Pretraining could be added in the LSTM step as well, using the encoder from an LSTM autoencoder in place of the LSTM. And in addition to pretraining, an attention mechanism could also be added. Using attention has shown great success in previous LSTM models \cite{attention}. Instead of returning the hidden state at the end of an input sequence as is usual for LSTMs, an attention mechanism returns a learned weighted sum of all of the hidden states at each input step. This helps to preserve more of the important information in the sequence, no matter whether at the beginning or end. It is quite likely that access to this additional information would make the classification task much more effective. 
+
+We could also gain some benefit by doing introspection, or analyzing the internal state of our trained model to see what representations it has actually learned. Bashivan et al. use a deconvolution method to look at feature maps and back projections for inputs. Using this method and working with neuroscientists familiar with brain activity patterns, we could determine the significance of what is being learned in the model and possibly use this improve our model, ie find hyperparameters that remove unrelated mental activity.
+\subsection{Future investigations}
+There are many directions for future work uncovered during the implementation of our project. One simple idea we could easily investigate with our model is performance on classification with different labels. Since the dataset already contains labels for mental tasks, we could easily evaluate our network to classify EEG recordings on these tasks. There is also a high amount of data available in the dataset that does not correspond to class labels, for example dream descriptions, which are simple text reports. It may be an interesting idea to investigate modifying the network to make use of this data, such as generation of text for an EEG input sequence. 
 \begin{thebibliography}{99}
 
 	\bibitem{learning_eeg_repr} 
@@ -269,7 +278,16 @@ Discussion content
 	Kingma, D. P. \& Ba, J. (2014). 
 	\textit{Adam: A Method for Stochastic Optimization.} 
 	CoRR, abs/1412.6980. 
-
+    
+    \bibitem{pretraining}
+    Erhan, D., Bengio, Y., Courville, A., Manzagol, P., Vincent, P., \& Bengio, S. (2010) 
+    \textit{Why Does Unsupervised Pre-training Help Deep Learning?}
+    Journal of Machine Learning Research 11 625-660
+    
+    \bibitem{attention}
+    Mnih, V., Heess, N., Graves, A., \& Kavukcuoglu, K. (2014)
+    \textit{Recurrent Models of Visual Attention},
+    CoRR, abs/1406.6247
 	
 \end{thebibliography}
 \end{document}
