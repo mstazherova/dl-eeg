@@ -37,6 +37,7 @@ The state-of-the-art approach to analysing and modeling EEG during sleep recordi
 
 \section{Data}
 \subsection{Data origin \& structure}
+\label{ssec:data_structure}
 The data set was created at a sleep laboratory \textbf{(ask:the name of the lab?)} in Canada and kindly shared with us for the purpose of this project. The researchers in the laboratory analyse and model brain activity, with the use of Electoencephalography (EEG). EEG is a noninvasive method to record electrical activity of the brain, by placing electrodes along the scalp. We received data from one experiment which was conducted in the laboratory and focused on modeling dream and sleep activity and correlating it with sleep reports. The participants were asked to come to the lab, perform a virtual tennis game, or spatial navigation task, or both and then, directly after that, to go to sleep. After a short period of time, the participants were waken up and asked to verbally describe what they dreamt about. In some session types, the full night sleeps were additionally recorded. For this particular experiment, 22-channel EEG setup was applied, with the sampling rate of 128 samples per second, and the electrodes were customized to the participants according to the International 10-20 system, as can be seen in the figure 1.
 \begin{figure}[!ht]
 	\centering
@@ -200,7 +201,7 @@ The Neural Network models have been trained on mini batches of size 32, using Ad
 \end{center}
 
 \section{Discussion \& Conclusion}
-Discussion content
+We have also conducted a small test to check how our network architecture performs on a slightly different classification problem. Namely, we have trained the network on the same dataset, but using the task type performed by a subject (see \ref{ssec:data_structure}) as the labels that the network should predict. We have employed a subject-out cross-validation evaluation scheme for that - the model has been validated on subjects unseen during training. We have achieved an average accuracy of $51.31\%$, which, given that the distribution of the 3 different tasks was approximately $50\%$, $25\%$, $25\%$, is not significantly higher than a random "majority class" guess. This would indicate that the per-subject variations are much easier to pick up for the network than those related to a specific task.
 
 \begin{thebibliography}{99}
 
